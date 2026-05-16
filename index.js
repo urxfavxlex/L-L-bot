@@ -37,7 +37,7 @@ for (const file of commandFiles) {
     client.commands.set(command.data.name, command);
 }
 
-client.once('clientReady', () => {
+client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}`);
 });
 
@@ -341,7 +341,7 @@ if (message.content.startsWith('>unjail')) {
 
     const logChannel = message.guild.channels.cache.get(process.env.MOD_LOG_CHANNEL_ID);
 
-for (const channel of jailChannels.values()) {
+    for (const channel of jailChannels.values()) {
     const attachment = await discordTranscripts.createTranscript(channel, {
         limit: -1,
         returnType: 'attachment',
@@ -376,7 +376,11 @@ for (const channel of jailChannels.values()) {
     await channel.delete().catch(() => {});
 }
 
-   return message.channel.send(`✅ | Released ${member} from jail.`);
+    if (message.channel) {
+        await message.channel.send(`✅ | Released ${member} from jail.`);
+    }
+
+    return;
 }
 
 if (message.content.startsWith('>')) return;
