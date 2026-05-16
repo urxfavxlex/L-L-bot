@@ -1,0 +1,79 @@
+{
+  "staffRoleIds": [],
+  "protectedRoleIds": [],
+  "roles": {
+    "jailed": "",
+    "trusted": "",
+    "verified": "",
+    "nsfwAccess": ""
+  },
+  "channels": {
+    "modLogs": "",
+    "messageLogs": "",
+    "memberLogs": "",
+    "jailLogs": ""
+  },
+  "categories": {
+    "jail": ""
+  },
+  "moderation": {
+    "dmUsersOnWarn": true,
+    "dmUsersOnModeration": false
+  },
+  "jail": {
+    "deleteChannelOnUnjail": true
+  },
+  "automod": {
+    "enabled": true,
+    "ignoredChannelIds": [],
+    "blockedWords": [
+      "badword1",
+      "bad phrase 2"
+    ],
+    "autoJailBlockedWords": true,
+    "deleteBlockedWordMessages": true,
+    "includeMatchedBlockedWordInLogs": false,
+    "inviteLinks": {
+      "enabled": true,
+      "deleteMessage": true
+    },
+    "spam": {
+      "enabled": true,
+      "messageLimit": 5,
+      "windowSeconds": 7
+    },
+    "caps": {
+      "enabled": true,
+      "minimumLength": 20,
+      "ratio": 0.75
+    },
+    "massMentions": {
+      "enabled": true,
+      "maxMentions": 5
+    },
+    "repeatedMessages": {
+      "enabled": true,
+      "maxRepeats": 3,
+      "windowSeconds": 30
+    },
+    "punishments": [
+      {
+        "offenses": 1,
+        "action": "warn"
+      },
+      {
+        "offenses": 2,
+        "action": "timeout",
+        "durationSeconds": 300
+      },
+      {
+        "offenses": 3,
+        "action": "jail"
+      },
+      {
+        "offenses": 5,
+        "action": "ban"
+      }
+    ]
+  }
+}
