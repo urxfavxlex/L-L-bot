@@ -374,14 +374,14 @@ client.on('messageCreate', async message => {
                 return message.reply('Already jailed.');
             }
 
-            if (activeJails.has(member.id)) return;
+            const jailKey = `${message.guild.id}-${member.id}`;
 
-            activeJails.add(member.id);
+if (activeJails.has(jailKey)) return;
+
+activeJails.add(jailKey);
 
             const args = message.content.trim().split(/\s+/);
             const reason = args.slice(2).join(' ') || 'No reason provided';
-                message.content.split(' ').slice(2).join(' ') ||
-                'No reason provided';
 
             await saveRoles(member, jailedRoleId);
 
@@ -398,7 +398,7 @@ client.on('messageCreate', async message => {
             ).catch(() => {});
 
             setTimeout(() => {
-                activeJails.delete(member.id);
+                activeJails.delete(jailKey);
             }, 5000);
 
             return;
