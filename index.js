@@ -432,6 +432,7 @@ if (message.content.startsWith('>unjail')) {
         await message.channel.send(`✅ | Released ${member} from jail.`);
     }
 }
+}
 
 if (message.content.startsWith('>')) return;
 
