@@ -433,8 +433,6 @@ if (message.content.startsWith('>unjail')) {
     }
 }
 
-return;
-
 if (message.content.startsWith('>')) return;
 
 const content = message.content.toLowerCase();
@@ -447,10 +445,10 @@ const matchedWord = blockedWords.find(word =>
 if (!matchedWord) return;
 
 await message.delete().catch(() => {});
-
+const jailedRoleId = process.env.JAILED_ROLE_ID;
 const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 const staffRoleId = '1371005644638912542';
-
+const jailedRoleId = process.env.JAILED_ROLE_ID;
 const autoMember = message.member;
 const jailedRole = message.guild.roles.cache.get(jailedRoleId);
 
@@ -486,7 +484,7 @@ let jailChannel = message.guild.channels.cache.find(
 
 if (!jailChannel) {
     jailChannel = await message.guild.channels.create({
-        name: `jail-${member.user.username.toLowerCase()}`,
+      name: `jail-${autoMember.user.username.toLowerCase()}`,
         type: 0,
         parent: jailCategoryId,
         permissionOverwrites: [
@@ -495,7 +493,7 @@ if (!jailChannel) {
                 deny: ['ViewChannel']
             },
             {
-                id: member.id,
+                id: autoMember.id,
                 allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
             },
             {
@@ -516,18 +514,18 @@ const jailEmbed = new EmbedBuilder()
 
 const jailButtons = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-        .setCustomId(`claim_jail_${member.id}`)
+       .setCustomId(`claim_jail_${autoMember.id}`)
         .setLabel('Claim')
         .setStyle(ButtonStyle.Primary),
 
     new ButtonBuilder()
-        .setCustomId(`close_jail_${member.id}`)
+        .setCustomId(`close_jail_${autoMember.id}`)
         .setLabel('Close')
         .setStyle(ButtonStyle.Danger)
 );
 
 await jailChannel.send({
-    content: `${member} <@&${staffRoleId}>`,
+content: `${autoMember} <@&${staffRoleId}>`,
     embeds: [jailEmbed],
     components: [jailButtons]
 });
