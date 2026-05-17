@@ -345,9 +345,10 @@ await jailChannel.send({
     embeds: [jailEmbed],
     components: [jailButtons]
 });
+    }
 
     return message.channel.send(`🚨 | Sent ${member} to jail [${jailChannel}].`);
-}
+
 if (message.content.startsWith('>unjail')) {
     if (!message.member.permissions.has('ManageRoles')) {
         return message.reply('You do not have permission to unjail members.');
@@ -426,9 +427,6 @@ if (message.content.startsWith('>unjail')) {
             files: [attachment]
         });
     }
-
-    await channel.delete().catch(() => {});
-}
 
     if (message.channel) {
         await message.channel.send(`✅ | Released ${member} from jail.`);
@@ -534,7 +532,8 @@ await jailChannel.send({
     embeds: [jailEmbed],
     components: [jailButtons]
 });
-});
+
+}
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isButton()) return;
@@ -552,5 +551,6 @@ client.on('interactionCreate', async interaction => {
         ephemeral: true
     });
 }
+});
 });
 client.login(process.env.DISCORD_TOKEN);
