@@ -268,10 +268,6 @@ client.on('messageCreate', async message => {
                     allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
                 },
                 {
-                    id: jailedRoleId,
-                    allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
-                },
-                {
                     id: staffRoleId,
                     allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
                 }
@@ -451,10 +447,6 @@ if (!jailChannel) {
                 id: jailedRoleId,
                 allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
             },
-            {
-                id: staffRoleId,
-                allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
-            }
         ]
     });
 }

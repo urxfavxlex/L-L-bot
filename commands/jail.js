@@ -74,10 +74,6 @@ module.exports = {
         id: member.id,
         allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
     },
-    {
-        id: jailedRoleId,
-        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
-    },
 ]
             });
         }
