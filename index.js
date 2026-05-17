@@ -27,7 +27,7 @@ const client = new Client({
 
 client.commands = new Collection();
 
-client.on('ready', () => {
+client.once('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
     client.user.setPresence({
@@ -49,10 +49,8 @@ for (const file of commandFiles) {
     const command = require(filePath);
 
     client.commands.set(command.data.name, command);
-}
 
-client.once('clientReady', () => {
-});
+}
 
 client.on('interactionCreate', async interaction => {
     try {
@@ -446,9 +444,8 @@ if (message.content.startsWith('>unjail')) {
             files: [attachment]
         });
     }
-
-        if (message.channel) {
-        await message.channel.send(`✅ | Released ${member} from jail.`);
+    if (message.channel) {
+     await message.channel.send(`✅ | Released ${member} from jail.`);
     }
 }
 }
