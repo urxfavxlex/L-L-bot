@@ -95,9 +95,22 @@ const jailEmbed = new EmbedBuilder()
     )
     .setColor('#ff4da6');
 
+const jailButtons = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+        .setCustomId(`claim_jail_${member.id}`)
+        .setLabel('Claim')
+        .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+        .setCustomId(`close_jail_${member.id}`)
+        .setLabel('Close')
+        .setStyle(ButtonStyle.Danger)
+);
+
 await jailChannel.send({
-    content: `${member} <@&1371005644638912542>`,
-    embeds: [jailEmbed]
+    content: `${member} <@&${staffRoleId}>`,
+    embeds: [jailEmbed],
+    components: [jailButtons]
 });
 
         if (interaction.replied || interaction.deferred) {

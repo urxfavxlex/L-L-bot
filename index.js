@@ -287,10 +287,23 @@ client.on('messageCreate', async message => {
         )
         .setColor('#ff4da6');
 
-    await jailChannel.send({
-        content: `${member} <@&${staffRoleId}>`,
-        embeds: [jailEmbed]
-    });
+    const jailButtons = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+        .setCustomId(`claim_jail_${member.id}`)
+        .setLabel('Claim')
+        .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+        .setCustomId(`close_jail_${member.id}`)
+        .setLabel('Close')
+        .setStyle(ButtonStyle.Danger)
+);
+
+await jailChannel.send({
+    content: `${member} <@&${staffRoleId}>`,
+    embeds: [jailEmbed],
+    components: [jailButtons]
+});
 
     return message.channel.send(`🚨 | Sent ${member} to jail [${jailChannel}].`);
 }
