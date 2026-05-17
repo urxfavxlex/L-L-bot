@@ -27,6 +27,18 @@ const client = new Client({
 
 client.commands = new Collection();
 
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+
+    client.user.setPresence({
+        activities: [{
+            name: 'Watching staff question their life choices',
+            type: 2
+        }],
+        status: 'online'
+    });
+});
+
 const activeAutoJails = new Set();
 const activeUnjails = new Set();
 const commandsPath = path.join(__dirname, 'commands');
@@ -40,7 +52,6 @@ for (const file of commandFiles) {
 }
 
 client.once('clientReady', () => {
-    console.log(`Logged in as ${client.user.tag}`);
 });
 
 client.on('interactionCreate', async interaction => {
