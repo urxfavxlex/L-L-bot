@@ -22,6 +22,7 @@ module.exports = {
 
         const jailedRoleId = process.env.JAILED_ROLE_ID;
         const jailCategoryId = process.env.JAIL_CATEGORY_ID;
+        const staffRoleId = '1371005644638912542';
 
         const jailedRole = interaction.guild.roles.cache.get(jailedRoleId);
 
@@ -66,11 +67,23 @@ module.exports = {
                 type: ChannelType.GuildText,
                 parent: jailCategoryId,
                 permissionOverwrites: [
-    {
-        id: interaction.guild.id,
-        deny: ['ViewChannel']
-    },
-]
+                    {
+                        id: interaction.guild.id,
+                        deny: ['ViewChannel']
+                    },
+                    {
+                        id: member.id,
+                        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+                    },
+                    {
+                        id: jailedRoleId,
+                        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+                    },
+                    {
+                        id: staffRoleId,
+                        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
+                    }
+                ]
             });
         }
 
