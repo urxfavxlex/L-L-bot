@@ -137,37 +137,33 @@ async function closeJailChannel(channel, closedBy) {
 // ---- Interaction Handler ----
 client.on('interactionCreate', async interaction => {
     try {
-        if (interaction.isButton()) {
+        if(interaction.isButton()) {
 
             const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
-            if (!isStaff) return interaction.reply({ content:'You do not have permission to use this.', ephemeral:true }).catch(()=>{});
+            if(!isStaff) return interaction.reply({ content:'You do not have permission to use this.', ephemeral:true }).catch(()=>{});
 
             // Claim Jail
-            if (interaction.customId.startsWith('claim_jail_')) {
-                return interaction.reply({ content:`🔒 | ${interaction.user} claimed this jail.`, ephemeral:false }).catch(()=>{});
-            }
+            if(interaction.customId.startsWith('claim_jail_')) return interaction.reply({ content:`🔒 | ${interaction.user} claimed this jail.`, ephemeral:false }).catch(()=>{});
 
             // Close Jail
-            if (interaction.customId.startsWith('close_jail_')) {
-                return interaction.reply({ content:`🔒 | Use ${PREFIX}close inside this jail channel to close it.`, ephemeral:true }).catch(()=>{});
-            }
+            if(interaction.customId.startsWith('close_jail_')) return interaction.reply({ content:`🔒 | Use ${PREFIX}close inside this jail channel to close it.`, ephemeral:true }).catch(()=>{});
 
             // Copy Role IDs
-            if (interaction.customId.startsWith('copyroles_')) {
+            if(interaction.customId.startsWith('copyroles_')) {
                 const targetId = interaction.customId.split('_')[1];
                 const guildMember = await interaction.guild.members.fetch(targetId).catch(()=>null);
                 if(!guildMember) return interaction.reply({ content:'User not found.', ephemeral:true }).catch(()=>{});
 
                 const ids = guildMember.roles.cache
-                    .filter(role => role.id !== interaction.guild.id)
+                    .filter(role=>role.id!==interaction.guild.id)
                     .sort((a,b)=>b.position-a.position)
                     .map(role=>role.id)
-                    .join(', ');
+                    .join(',');
 
                 return interaction.reply({ content:`📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``, ephemeral:true }).catch(()=>{});
             }
 
-            return; // End button handling
+            return;
         }
 
         // ChatInputCommand
@@ -196,7 +192,7 @@ client.on('messageCreate', async message => {
         const jailedRole = message.guild.roles.cache.get(jailedRoleId);
 
         // === CLOSE, UNJAIL, JAIL, AUTOMOD ===
-        // Paste your exact existing jail/unjail/auto-jail code here
+        // Paste your existing jail/un-jail/auto-jail logic here exactly as before
 
         // USERINFO
         if(message.content.startsWith(`${PREFIX}userinfo`)) {
@@ -204,7 +200,7 @@ client.on('messageCreate', async message => {
             const member = message.mentions.members.first() || message.guild.members.cache.get(args[1]) || message.member;
 
             const roles = member.roles.cache
-                .filter(role => role.id !== message.guild.id)
+                .filter(role => role.id!==message.guild.id)
                 .sort((a,b)=>b.position-a.position)
                 .map(role=>role.toString());
 
