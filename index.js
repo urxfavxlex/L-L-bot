@@ -209,6 +209,14 @@ client.on('interactionCreate', async interaction => {
 
         if (interaction.isButton()) {
 
+            const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
+            if (!isStaff) {
+                return interaction.reply({
+                    content: 'You do not have permission to use this.',
+                    ephemeral: true
+                }).catch(() => {});
+            }
+
             if (interaction.customId.startsWith('claim_jail_')) {
               return interaction.reply({
     content: `🔒 | ${interaction.user} claimed this jail.`,
@@ -265,6 +273,9 @@ client.on('messageCreate', async message => {
         // CLOSE
 
         if (message.content.startsWith(`${PREFIX}close`)) {
+            if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+    return message.reply('You do not have permission to close jails.');
+}
 
     if (!message.channel || !message.channel.name?.startsWith('jail-')) {
         return message.reply('This is not a jail channel.');
@@ -285,6 +296,9 @@ client.on('messageCreate', async message => {
         // UNJAIL
 
         if (message.content.startsWith(`${PREFIX}unjail`)) {
+            if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+    return message.reply('You do not have permission to unjail members.');
+}
 
             if (!message.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
                 return message.reply('No permission.');
