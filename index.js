@@ -345,9 +345,9 @@ await jailChannel.send({
     embeds: [jailEmbed],
     components: [jailButtons]
 });
-    }
 
-    return message.channel.send(`🚨 | Sent ${member} to jail [${jailChannel}].`);
+return message.channel.send(`🚨 | Sent ${member} to jail [${jailChannel}].`);
+}
 
 if (message.content.startsWith('>unjail')) {
     if (!message.member.permissions.has('ManageRoles')) {
@@ -545,11 +545,11 @@ client.on('interactionCreate', async interaction => {
     }
 
     if (interaction.customId.startsWith('close_jail_')) {
-    await interaction.reply({
-        content: `🔒 | Use >close to close this jail.`,
-        ephemeral: true
-    });
-}
+        await interaction.reply({
+            content: `🔒 | Use >close to close this jail.`,
+            ephemeral: true
+        });
+       }
 });
 });
 client.login(process.env.DISCORD_TOKEN);
