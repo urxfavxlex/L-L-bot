@@ -232,7 +232,34 @@ client.on('interactionCreate', async interaction => {
             }
 
             return;
+
+            if (interaction.customId.startsWith('copyroles_')) {
+
+    const targetId = interaction.customId.split('_')[1];
+
+    const guildMember = await interaction.guild.members.fetch(targetId).catch(() => null);
+
+    if (!guildMember) {
+        return interaction.reply({
+            content: 'User not found.',
+            ephemeral: true
+        }).catch(() => {});
+    }
+
+    const ids = guildMember.roles.cache
+        .filter(role => role.id !== interaction.guild.id)
+        .sort((a, b) => b.position - a.position)
+        .map(role => role.id)
+        .join(', ');
+
+    return interaction.reply({
+        content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``,
+        ephemeral: true
+    }).catch(() => {});
+}
+
         }
+
 
         if (!interaction.isChatInputCommand()) return;
 
