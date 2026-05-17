@@ -406,8 +406,6 @@ activeJails.add(jailKey);
 
         // USERINFO
 
-// USERINFO
-
 if (message.content.startsWith(`${PREFIX}userinfo`)) {
 
     const args = message.content.trim().split(/ +/);
@@ -440,9 +438,7 @@ if (message.content.startsWith(`${PREFIX}userinfo`)) {
     if (member.permissions.has(PermissionsBitField.Flags.ManageMessages)) perms.push('Manage Messages');
 
     const embed = new EmbedBuilder()
-        .setColor(member.displayHexColor === '#000000'
-            ? '#d6a3ff'
-            : member.displayHexColor)
+        .setColor('#B22959')
         .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
         .setDescription(
             `# User Info • ${member.displayName}\n\n` +
@@ -485,10 +481,20 @@ if (message.content.startsWith(`${PREFIX}userinfo`)) {
         })
         .setTimestamp();
 
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(`copyroles_${member.id}`)
+            .setLabel('Copy Role IDs')
+            .setEmoji('📋')
+            .setStyle(ButtonStyle.Secondary)
+    );
+
     return message.reply({
-        embeds: [embed]
+        embeds: [embed],
+        components: [row]
     }).catch(() => {});
 }
+
         // IGNORE COMMANDS
 
         if (message.content.startsWith(PREFIX)) return;
