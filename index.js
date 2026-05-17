@@ -447,12 +447,12 @@ if (!matchedWord) return;
 
 await message.delete().catch(() => {});
 
-const jailedRoleId = process.env.JAILED_ROLE_ID;
+const autoJailedRoleId = process.env.JAILED_ROLE_ID;
 const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 const staffRoleId = '1371005644638912542';
 
 const autoMember = message.member;
-const jailedRole = message.guild.roles.cache.get(jailedRoleId);
+const jailedRole = message.guild.roles.cache.get(autoJailedRoleId);
 
 if (!autoMember || !jailedRole) return;
 
@@ -472,7 +472,7 @@ const botMember = message.guild.members.me;
 
 const rolesToRemove = autoMember.roles.cache.filter(role =>
     role.id !== message.guild.id &&
-    role.id !== jailedRoleId &&
+    role.id !== autoJailedRoleId &&
     !role.managed &&
     role.position < botMember.roles.highest.position
 );
@@ -495,7 +495,7 @@ if (!jailChannel) {
                 deny: ['ViewChannel']
             },
             {
-                id: jailedRoleId,
+                id: autoJailedRoleId,
                 deny: ['ViewChannel']
             },
             {
@@ -536,7 +536,7 @@ content: `${autoMember} <@&${staffRoleId}>`,
     components: [jailButtons]
 });
 
-}
+});
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isButton()) return;
@@ -554,6 +554,5 @@ client.on('interactionCreate', async interaction => {
             ephemeral: true
         });
        }
-});
 });
 client.login(process.env.DISCORD_TOKEN);
