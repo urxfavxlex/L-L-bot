@@ -78,10 +78,6 @@ module.exports = {
         id: jailedRoleId,
         allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
     },
-    {
-        id: '1371005644638912542',
-        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
-    }
 ]
             });
         }
