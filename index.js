@@ -28,7 +28,7 @@ const client = new Client({
 client.commands = new Collection();
 
 const activeAutoJails = new Set();
-
+const activeUnjails = new Set();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
@@ -362,6 +362,12 @@ if (message.content.startsWith('>unjail')) {
         return message.reply('Please mention a user to unjail.');
     }
 
+    if (activeUnjails.has(member.id)) return;
+    activeUnjails.add(member.id);
+    if (!member) {
+        return message.reply('Please mention a user to unjail.');
+    }
+
     await message.channel.send(`🔓 ${member} is being unjailed...`);
 
     const jailedRoleId = process.env.JAILED_ROLE_ID;
@@ -437,6 +443,8 @@ if (message.content.startsWith('>unjail')) {
 }
 
 if (message.content.startsWith('>')) return;
+activeUnjails.delete(member.id);
+return;
 
 const content = message.content.toLowerCase();
 console.log('Checking automod content:', content);
