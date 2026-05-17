@@ -443,8 +443,6 @@ if (message.content.startsWith('>unjail')) {
 }
 
 if (message.content.startsWith('>')) return;
-activeUnjails.delete(autoMember.id);
-return;
 
 const content = message.content.toLowerCase();
 console.log('Checking automod content:', content);
