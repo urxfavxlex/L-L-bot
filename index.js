@@ -262,89 +262,7 @@ client.on('interactionCreate', async interaction => {
     }
 
     return;
-    
-client.on('interactionCreate', async interaction => {
-    try {
-
-        if (interaction.isButton()) {
-
-            const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
-            if (!isStaff) {
-                return interaction.reply({
-                    content: 'You do not have permission to use this.',
-                    ephemeral: true
-                }).catch(() => {});
-            }
-
-            // Claim Jail button
-            if (interaction.customId.startsWith('claim_jail_')) {
-                return interaction.reply({
-                    content: `🔒 | ${interaction.user} claimed this jail.`,
-                    ephemeral: false
-                }).catch(() => {});
-            }
-
-            // Close Jail button
-            if (interaction.customId.startsWith('close_jail_')) {
-                return interaction.reply({
-                    content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`,
-                    ephemeral: true
-                }).catch(() => {});
-            }
-
-            // Copy Role IDs button
-            if (interaction.customId.startsWith('copyroles_')) {
-                const targetId = interaction.customId.split('_')[1];
-
-                const guildMember = await interaction.guild.members.fetch(targetId).catch(() => null);
-
-                if (!guildMember) {
-                    return interaction.reply({
-                        content: 'User not found.',
-                        ephemeral: true
-                    }).catch(() => {});
-                }
-
-                const ids = guildMember.roles.cache
-                    .filter(role => role.id !== interaction.guild.id)
-                    .sort((a, b) => b.position - a.position)
-                    .map(role => role.id)
-                    .join(', ');
-
-                return interaction.reply({
-                    content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``,
-                    ephemeral: true
-                }).catch(() => {});
-            }
-
-            return; // end of if(interaction.isButton())
-        }
-
-        // ChatInputCommand handling
-        if (!interaction.isChatInputCommand()) return;
-
-        const command = client.commands.get(interaction.commandName);
-        if (!command) return;
-
-        await command.execute(interaction);
-
-    } catch (error) {
-        console.error(error);
-
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({
-                content: 'There was an error.',
-                ephemeral: true
-            }).catch(() => {});
-        } else {
-            await interaction.reply({
-                content: 'There was an error.',
-                ephemeral: true
-            }).catch(() => {});
-        }
-    }
 });
-
 client.on('messageCreate', async message => {
 
     try {
@@ -495,49 +413,49 @@ if (message.content.startsWith(`${PREFIX}userinfo`)) {
 
     const args = message.content.trim().split(/ +/);
 
-    const member =
-        message.mentions.members.first() ||
-        message.guild.members.cache.get(args[1]) ||
-        message.member;
+    const targetMember = 
+    message.mentions.members.first() 
+    message.guild.members.cache.get(args[1])
+    message.member;
 
-    const roles = member.roles.cache
+    const roles = targetMember.roles.cache
         .filter(role => role.id !== message.guild.id)
         .sort((a, b) => b.position - a.position)
         .map(role => role.toString());
 
-    const createdTimestamp = Math.floor(member.user.createdTimestamp / 1000);
-    const joinedTimestamp = Math.floor(member.joinedTimestamp / 1000);
+    const createdTimestamp = Math.floor(targetMember.user.createdTimestamp / 1000);
+    const joinedTimestamp = Math.floor(targetMember.joinedTimestamp / 1000);
 
-    const boosting = member.premiumSince
-        ? `<t:${Math.floor(member.premiumSinceTimestamp / 1000)}:R>`
+    const boosting = targetMember.premiumSince
+        ? `<t:${Math.floor(targetMember.premiumSinceTimestamp / 1000)}:R>`
         : 'Not Boosting';
 
     const perms = [];
 
-    if (member.permissions.has(PermissionsBitField.Flags.Administrator)) perms.push('Administrator');
-    if (member.permissions.has(PermissionsBitField.Flags.ManageGuild)) perms.push('Manage Server');
-    if (member.permissions.has(PermissionsBitField.Flags.ManageRoles)) perms.push('Manage Roles');
-    if (member.permissions.has(PermissionsBitField.Flags.ManageChannels)) perms.push('Manage Channels');
-    if (member.permissions.has(PermissionsBitField.Flags.BanMembers)) perms.push('Ban Members');
-    if (member.permissions.has(PermissionsBitField.Flags.KickMembers)) perms.push('Kick Members');
-    if (member.permissions.has(PermissionsBitField.Flags.ManageMessages)) perms.push('Manage Messages');
+    if (targetMember.permissions.has(PermissionsBitField.Flags.Administrator)) perms.push('Administrator');
+    if (targetMember.permissions.has(PermissionsBitField.Flags.ManageGuild)) perms.push('Manage Server');
+    if (targetMember.permissions.has(PermissionsBitField.Flags.ManageRoles)) perms.push('Manage Roles');
+    if (targetMember.permissions.has(PermissionsBitField.Flags.ManageChannels)) perms.push('Manage Channels');
+    if (targetMember.permissions.has(PermissionsBitField.Flags.BanMembers)) perms.push('Ban Members');
+    if (targetMember.permissions.has(PermissionsBitField.Flags.KickMembers)) perms.push('Kick Members');
+    if (targetMember.permissions.has(PermissionsBitField.Flags.ManageMessages)) perms.push('Manage Messages');
 
     const embed = new EmbedBuilder()
         .setColor('#B22959')
-        .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
+        .setThumbnail(targetMember.user.displayAvatarURL({ dynamic: true, size: 1024 }))
         .setDescription(
-            `# User Info • ${member.displayName}\n\n` +
+            `# User Info • ${targetMember.displayName}\n\n` +
 
-            `**User:** ${member.user.tag}\n` +
-            `**Mention:** ${member}\n` +
-            `**ID:** \`${member.id}\`\n\n` +
+            `**User:** ${targetMember.user.tag}\n` +
+            `**Mention:** ${targetMember}\n` +
+            `**ID:** \`${targetMember.id}\`\n\n` +
 
             `━━━━━━━━━━━━━━━━━━━━\n\n` +
 
             `## Member Info\n\n` +
 
-            `**Nickname:** ${member.nickname || 'None'}\n` +
-            `**Color:** ${member.displayHexColor}\n` +
+            `**Nickname:** ${targetMember.nickname || 'None'}\n` +
+            `**Color:** ${targetMember.displayHexColor}\n` +
             `**Boosting:** ${boosting}\n\n` +
 
             `**Joined Server:**\n<t:${joinedTimestamp}:F>\n<t:${joinedTimestamp}:R>\n\n` +
@@ -618,12 +536,8 @@ if (message.content.startsWith(`${PREFIX}userinfo`)) {
         setTimeout(() => {
             activeAutoJails.delete(member.id);
         }, 5000);
+} catch (error) {
+    console.error('Message handler error:', error);
+}
 
-    } catch (error) {
-
-        console.error('Message handler error:', error);
-
-    }
-});
-
-client.login(process.env.DISCORD_TOKEN); 
+client.login(process.env.DISCORD_TOKEN);
