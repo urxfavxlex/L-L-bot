@@ -428,12 +428,12 @@ if (message.content.startsWith('>unjail')) {
         });
     }
 
-    if (message.channel) {
+        if (message.channel) {
         await message.channel.send(`✅ | Released ${member} from jail.`);
     }
-
-    return;
 }
+
+return;
 
 if (message.content.startsWith('>')) return;
 
