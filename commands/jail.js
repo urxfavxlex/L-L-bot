@@ -1,5 +1,5 @@
 const db = require('../database');
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('jail')
@@ -80,13 +80,13 @@ module.exports = {
                         allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
                     },
                     {
-                        id: jailedRoleId,
-                        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
-                    },
+                         id: jailedRoleId,
+                         deny: ['ViewChannel']
+                        },
                     {
-                        id: staffRoleId,
-                        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
-                    }
+                         id: staffRoleId,
+                         allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles', 'UseApplicationCommands']
+                        }
                 ]
             });
         }
