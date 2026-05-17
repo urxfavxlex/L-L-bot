@@ -409,7 +409,6 @@ client.on('messageCreate', async message => {
 if (message.content.startsWith(`${PREFIX}userinfo`)) {
     return message.reply('userinfo works').catch(() => {});
 }
-
         // IGNORE COMMANDS
 
         if (message.content.startsWith(PREFIX)) return;
