@@ -406,8 +406,88 @@ client.on('messageCreate', async message => {
 
         // USERINFO
 
+// USERINFO
+
 if (message.content.startsWith(`${PREFIX}userinfo`)) {
-    return message.reply('userinfo works').catch(() => {});
+
+    const args = message.content.trim().split(/ +/);
+
+    const member =
+        message.mentions.members.first() ||
+        message.guild.members.cache.get(args[1]) ||
+        message.member;
+
+    const roles = member.roles.cache
+        .filter(role => role.id !== message.guild.id)
+        .sort((a, b) => b.position - a.position)
+        .map(role => role.toString());
+
+    const createdTimestamp = Math.floor(member.user.createdTimestamp / 1000);
+    const joinedTimestamp = Math.floor(member.joinedTimestamp / 1000);
+
+    const boosting = member.premiumSince
+        ? `<t:${Math.floor(member.premiumSinceTimestamp / 1000)}:R>`
+        : 'Not Boosting';
+
+    const perms = [];
+
+    if (member.permissions.has(PermissionsBitField.Flags.Administrator)) perms.push('Administrator');
+    if (member.permissions.has(PermissionsBitField.Flags.ManageGuild)) perms.push('Manage Server');
+    if (member.permissions.has(PermissionsBitField.Flags.ManageRoles)) perms.push('Manage Roles');
+    if (member.permissions.has(PermissionsBitField.Flags.ManageChannels)) perms.push('Manage Channels');
+    if (member.permissions.has(PermissionsBitField.Flags.BanMembers)) perms.push('Ban Members');
+    if (member.permissions.has(PermissionsBitField.Flags.KickMembers)) perms.push('Kick Members');
+    if (member.permissions.has(PermissionsBitField.Flags.ManageMessages)) perms.push('Manage Messages');
+
+    const embed = new EmbedBuilder()
+        .setColor(member.displayHexColor === '#000000'
+            ? '#d6a3ff'
+            : member.displayHexColor)
+        .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
+        .setDescription(
+            `# User Info • ${member.displayName}\n\n` +
+
+            `**User:** ${member.user.tag}\n` +
+            `**Mention:** ${member}\n` +
+            `**ID:** \`${member.id}\`\n\n` +
+
+            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+            `## Member Info\n\n` +
+
+            `**Nickname:** ${member.nickname || 'None'}\n` +
+            `**Color:** ${member.displayHexColor}\n` +
+            `**Boosting:** ${boosting}\n\n` +
+
+            `**Joined Server:**\n<t:${joinedTimestamp}:F>\n<t:${joinedTimestamp}:R>\n\n` +
+
+            `**Account Created:**\n<t:${createdTimestamp}:F>\n<t:${createdTimestamp}:R>\n\n` +
+
+            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+            `## Significant Permissions\n\n` +
+
+            `${perms.length
+                ? perms.join('\n')
+                : 'None'}\n\n` +
+
+            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+
+            `## Roles (${roles.length})\n\n` +
+
+            `${roles.length
+                ? roles.join(', ')
+                : 'No roles'}`
+        )
+        .setFooter({
+            text: `Requested by ${message.author.tag}`,
+            iconURL: message.author.displayAvatarURL({ dynamic: true })
+        })
+        .setTimestamp();
+
+    return message.reply({
+        embeds: [embed]
+    }).catch(() => {});
 }
         // IGNORE COMMANDS
 
