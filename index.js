@@ -198,6 +198,44 @@ client.on('messageCreate', async message => {
     if (message.author.bot) return;
     if (!message.guild) return;
 
+    if (message.content.startsWith('>close')) {
+
+    if (!message.channel.name.startsWith('jail-')) {
+        return message.reply('This is not a jail channel.');
+    }
+
+    const logChannel = message.guild.channels.cache.get(process.env.MOD_LOG_CHANNEL_ID);
+
+    const attachment = await discordTranscripts.createTranscript(message.channel, {
+        limit: -1,
+        returnType: 'attachment',
+        filename: `${message.channel.name}.html`
+    });
+
+    if (logChannel) {
+        const transcriptEmbed = new EmbedBuilder()
+            .setTitle('Jail Closed')
+            .setDescription(
+                `**Channel:** ${message.channel.name}\n` +
+                `**Closed By:** ${message.author}`
+            )
+            .setColor('#ff4da6')
+            .setTimestamp();
+
+        await logChannel.send({
+            embeds: [transcriptEmbed],
+            files: [attachment]
+        });
+    }
+
+    await message.channel.send('🔒 | Closing jail in 3 seconds...');
+
+    setTimeout(async () => {
+        await message.channel.delete().catch(() => {});
+    }, 3000);
+
+    return;
+}
     if (message.content.startsWith('>jail')) {
     if (!message.member.permissions.has('ManageRoles')) {
         return message.reply('You do not have permission to jail members.');
@@ -249,6 +287,9 @@ client.on('messageCreate', async message => {
     await member.roles.remove(rolesToRemove).catch(() => {});
     await member.roles.add(jailedRole).catch(() => {});
 
+    if (member.voice.channel) {
+    await member.voice.disconnect().catch(() => {});
+} 
     let jailChannel = message.guild.channels.cache.find(
         ch => ch.name === `jail-${member.user.username.toLowerCase()}`
     );
@@ -476,9 +517,22 @@ const jailEmbed = new EmbedBuilder()
     )
     .setColor('#ff4da6');
 
+const jailButtons = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+        .setCustomId(`claim_jail_${member.id}`)
+        .setLabel('Claim')
+        .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+        .setCustomId(`close_jail_${member.id}`)
+        .setLabel('Close')
+        .setStyle(ButtonStyle.Danger)
+);
+
 await jailChannel.send({
     content: `${member} <@&${staffRoleId}>`,
-    embeds: [jailEmbed]
+    embeds: [jailEmbed],
+    components: [jailButtons]
 });
 });
 
@@ -493,12 +547,10 @@ client.on('interactionCreate', async interaction => {
     }
 
     if (interaction.customId.startsWith('close_jail_')) {
-        await interaction.reply({
-            content: `🔒 | Closing jail...`,
-            ephemeral: true
-        });
-
-        await interaction.channel.delete().catch(() => {});
-    }
+    await interaction.reply({
+        content: `🔒 | Use >close to close this jail.`,
+        ephemeral: true
+    });
+}
 });
 client.login(process.env.DISCORD_TOKEN);

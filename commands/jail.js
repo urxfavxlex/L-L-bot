@@ -57,6 +57,10 @@ module.exports = {
         await member.roles.remove(rolesToRemove);
         await member.roles.add(jailedRole);
 
+        if (member.voice.channel) {
+    await member.voice.disconnect().catch(() => {});
+}
+
         let jailChannel = interaction.guild.channels.cache.find(
             ch => ch.name === `jail-${member.user.username.toLowerCase()}`
         );
