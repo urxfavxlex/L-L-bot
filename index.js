@@ -549,7 +549,7 @@ content: `${autoMember} <@&${staffRoleId}>`,
     embeds: [jailEmbed],
     components: [jailButtons]
 });
-setTimeout(() => activeUnjails.delete(member.id), 10000);
+setTimeout(() => activeAutoJails.delete(autoMember.id), 10000);
 });
 
 client.on('interactionCreate', async interaction => {
