@@ -404,6 +404,14 @@ client.on('messageCreate', async message => {
             return;
         }
 
+        // USERINFO
+
+if (message.content.startsWith(`${PREFIX}userinfo`)) {
+
+    // all the userinfo code here
+
+}
+
         // IGNORE COMMANDS
 
         if (message.content.startsWith(PREFIX)) return;
