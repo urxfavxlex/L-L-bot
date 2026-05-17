@@ -70,10 +70,6 @@ module.exports = {
         id: interaction.guild.id,
         deny: ['ViewChannel']
     },
-    {
-        id: member.id,
-        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
-    },
 ]
             });
         }

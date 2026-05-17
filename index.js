@@ -259,19 +259,23 @@ client.on('messageCreate', async message => {
             type: 0,
             parent: jailCategoryId,
             permissionOverwrites: [
-                {
-                    id: message.guild.id,
-                    deny: ['ViewChannel']
-                },
-                {
-                    id: member.id,
-                    allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
-                },
-                {
-                    id: staffRoleId,
-                    allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
-                }
-            ]
+    {
+        id: message.guild.id,
+        deny: ['ViewChannel']
+    },
+    {
+        id: jailedRoleId,
+        deny: ['ViewChannel']
+    },
+    {
+        id: member.id,
+        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+    },
+    {
+        id: staffRoleId,
+        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
+    }
+]
         });
     }
 
@@ -444,9 +448,9 @@ if (!jailChannel) {
                 allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
             },
             {
-                id: jailedRoleId,
-                allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
-            },
+                id: staffRoleId,
+                allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
+            }
         ]
     });
 }
