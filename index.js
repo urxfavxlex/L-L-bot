@@ -1,4 +1,4 @@
- const discordTranscripts = require('discord-html-transcripts');
+const discordTranscripts = require('discord-html-transcripts');
 const blockedWords = require('./blockedWords.json');
 const db = require('./database');
 require('dotenv').config();
@@ -65,7 +65,7 @@ if (fs.existsSync(commandsPath)) {
 }
 
 function jailChannelName(member) {
-    return `jail-${member.id}`;
+    return `jail-${member.user.username.toLowerCase()}`;
 }
 
 async function saveRoles(member, jailedRoleId) {
@@ -210,17 +210,17 @@ client.on('interactionCreate', async interaction => {
         if (interaction.isButton()) {
 
             if (interaction.customId.startsWith('claim_jail_')) {
-                return interaction.reply({
-                    content: `🔒 | ${interaction.user} claimed this jail.`,
-                    ephemeral: false
-                });
+              return interaction.reply({
+    content: `🔒 | ${interaction.user} claimed this jail.`,
+    ephemeral: false
+}).catch(() => {}); 
             }
 
             if (interaction.customId.startsWith('close_jail_')) {
                 return interaction.reply({
-                    content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`,
-                    ephemeral: true
-                });
+    content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`,
+    ephemeral: true
+}).catch(() => {});
             }
 
             return;
@@ -266,17 +266,22 @@ client.on('messageCreate', async message => {
 
         if (message.content.startsWith(`${PREFIX}close`)) {
 
-            if (!message.channel.name.startsWith('jail-')) {
-                return message.reply('This is not a jail channel.');
-            }
+    if (!message.channel || !message.channel.name?.startsWith('jail-')) {
+        return message.reply('This is not a jail channel.');
+    }
 
-            await message.channel.send('🔒 | Saving transcript and closing jail...').catch(() => {});
+    const channelToClose = message.channel;
 
-            await closeJailChannel(message.channel, message.author);
+    await channelToClose.send(
+        '🔒 | Saving transcript and closing jail...'
+    ).catch(() => {});
 
-            return;
-        }
+    setTimeout(async () => {
+        await closeJailChannel(channelToClose, message.author);
+    }, 1500);
 
+    return;
+}
         // UNJAIL
 
         if (message.content.startsWith(`${PREFIX}unjail`)) {
@@ -291,14 +296,17 @@ client.on('messageCreate', async message => {
                 return message.reply('Mention a user.');
             }
 
-            if (activeUnjails.has(member.id)) return;
+            const lockKey = `${message.guild.id}-${member.id}`;
+            
+            if (activeUnjails.has(lockKey)) return;
+            
+            activeUnjails.add(lockKey);
 
-            activeUnjails.add(member.id);
-
-            await message.channel.send(
-                `🔓 ${member} is being unjailed...`
-            ).catch(() => {});
-
+            if (message.channel) {
+    await message.channel.send(
+        `🔓 ${member} is being unjailed...`
+    ).catch(() => {});
+}
             await member.roles.remove(jailedRoleId).catch(() => {});
 
             const row = db.prepare(`
@@ -310,9 +318,7 @@ client.on('messageCreate', async message => {
 
                 const roles = JSON.parse(row.roles);
 
-                for (const roleId of roles) {
-                    await member.roles.add(roleId).catch(() => {});
-                }
+               await member.roles.add(roles).catch(() => {});
 
                 db.prepare(`
                     DELETE FROM jailed_users
@@ -320,12 +326,13 @@ client.on('messageCreate', async message => {
                 `).run(member.id);
             }
 
-            await message.channel.send(
-                `✅ | Released ${member} from jail.`
-            ).catch(() => {});
-
+           if (message.channel) {
+    await message.channel.send(
+        `✅ | Released ${member} from jail.`
+    ).catch(() => {});
+}
             setTimeout(() => {
-                activeUnjails.delete(member.id);
+            activeUnjails.delete(lockKey);
             }, 5000);
 
             return;
@@ -357,7 +364,8 @@ client.on('messageCreate', async message => {
 
             activeJails.add(member.id);
 
-            const reason =
+            const args = message.content.trim().split(/\s+/);
+            const reason = args.slice(2).join(' ') || 'No reason provided';
                 message.content.split(' ').slice(2).join(' ') ||
                 'No reason provided';
 
