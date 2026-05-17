@@ -194,7 +194,7 @@ client.on('interactionCreate', async interaction => {
 
 client.on('messageCreate', async message => {
     console.log(`Saw message: ${message.content}`);
-
+    console.log(`Message ID: ${message.id}`);
     if (message.author.bot) return;
     if (!message.guild) return;
 
@@ -484,6 +484,7 @@ let jailChannel = message.guild.channels.cache.find(
     ch => ch.name === `jail-${autoMember.user.username.toLowerCase()}`
 );
 
+if (jailChannel) return;
 if (!jailChannel) {
     jailChannel = await message.guild.channels.create({
       name: `jail-${autoMember.user.username.toLowerCase()}`,
