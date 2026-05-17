@@ -451,12 +451,12 @@ await message.delete().catch(() => {});
 const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 const staffRoleId = '1371005644638912542';
 
-const member = message.member;
+const autoMember = message.member;
 const jailedRole = message.guild.roles.cache.get(jailedRoleId);
 
-if (!member || !jailedRole) return;
+if (!autoMember || !jailedRole) return;
 
-const savedRoles = member.roles.cache
+const savedRoles = autoMember.roles.cache
     .filter(role =>
         role.id !== message.guild.id &&
         !role.managed
@@ -466,22 +466,22 @@ const savedRoles = member.roles.cache
 db.prepare(`
     INSERT OR REPLACE INTO jailed_users (user_id, roles)
     VALUES (?, ?)
-`).run(member.id, JSON.stringify(savedRoles));
+`).run(autoMember.id, JSON.stringify(savedRoles));
 
 const botMember = message.guild.members.me;
 
-const rolesToRemove = member.roles.cache.filter(role =>
+const rolesToRemove = autoMember.roles.cache.filter(role =>
     role.id !== message.guild.id &&
     role.id !== jailedRoleId &&
     !role.managed &&
     role.position < botMember.roles.highest.position
 );
 
-await member.roles.remove(rolesToRemove).catch(() => {});
-await member.roles.add(jailedRole).catch(() => {});
+await autoMember.roles.remove(rolesToRemove).catch(() => {});
+await autoMember.roles.add(jailedRole).catch(() => {});
 
 let jailChannel = message.guild.channels.cache.find(
-    ch => ch.name === `jail-${member.user.username.toLowerCase()}`
+    ch => ch.name === `jail-${autoMember.user.username.toLowerCase()}`
 );
 
 if (!jailChannel) {
