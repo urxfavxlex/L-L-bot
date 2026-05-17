@@ -443,7 +443,7 @@ if (message.content.startsWith('>unjail')) {
 }
 
 if (message.content.startsWith('>')) return;
-activeUnjails.delete(member.id);
+activeUnjails.delete(autoMember.id);
 return;
 
 const content = message.content.toLowerCase();
@@ -549,7 +549,7 @@ content: `${autoMember} <@&${staffRoleId}>`,
     embeds: [jailEmbed],
     components: [jailButtons]
 });
-activeAutoJails.delete(autoMember.id);
+setTimeout(() => activeUnjails.delete(member.id), 10000);
 });
 
 client.on('interactionCreate', async interaction => {
