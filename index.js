@@ -482,4 +482,23 @@ await jailChannel.send({
 });
 });
 
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isButton()) return;
+
+    if (interaction.customId.startsWith('claim_jail_')) {
+        await interaction.reply({
+            content: `🔒 | ${interaction.user} claimed this jail.`,
+            ephemeral: false
+        });
+    }
+
+    if (interaction.customId.startsWith('close_jail_')) {
+        await interaction.reply({
+            content: `🔒 | Closing jail...`,
+            ephemeral: true
+        });
+
+        await interaction.channel.delete().catch(() => {});
+    }
+});
 client.login(process.env.DISCORD_TOKEN);
