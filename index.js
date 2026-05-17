@@ -137,7 +137,6 @@ async function closeJailChannel(channel, closedBy) {
 // ---- Interaction Handler ----
 client.on('interactionCreate', async interaction => {
     try {
-
         if (interaction.isButton()) {
 
             const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
@@ -197,8 +196,7 @@ client.on('messageCreate', async message => {
         const jailedRole = message.guild.roles.cache.get(jailedRoleId);
 
         // === CLOSE, UNJAIL, JAIL, AUTOMOD ===
-        // Copy your current logic exactly as before (no changes)
-        // This preserves all jail, unjail, automod functionality
+        // Paste your exact existing jail/unjail/auto-jail code here
 
         // USERINFO
         if(message.content.startsWith(`${PREFIX}userinfo`)) {
@@ -246,7 +244,7 @@ client.on('messageCreate', async message => {
                 new ButtonBuilder().setCustomId(`copyroles_${member.id}`).setLabel('Copy Role IDs').setEmoji('📋').setStyle(ButtonStyle.Secondary)
             );
 
-            return message.reply({ embeds:[embed], components:[row] }).catch(()=>{});
+            message.reply({ embeds:[embed], components:[row] }).catch(()=>{});
         }
 
     } catch(error){
