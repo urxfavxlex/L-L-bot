@@ -356,11 +356,11 @@ if (message.content.startsWith('>unjail')) {
 
     const member = message.mentions.members.first();
 
-    await message.channel.send(`🔓 ${member} is being unjailed...`);
-
     if (!member) {
         return message.reply('Please mention a user to unjail.');
     }
+
+    await message.channel.send(`🔓 ${member} is being unjailed...`);
 
     const jailedRoleId = process.env.JAILED_ROLE_ID;
 
@@ -445,10 +445,11 @@ const matchedWord = blockedWords.find(word =>
 if (!matchedWord) return;
 
 await message.delete().catch(() => {});
+
 const jailedRoleId = process.env.JAILED_ROLE_ID;
 const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 const staffRoleId = '1371005644638912542';
-const jailedRoleId = process.env.JAILED_ROLE_ID;
+
 const autoMember = message.member;
 const jailedRole = message.guild.roles.cache.get(jailedRoleId);
 
@@ -490,6 +491,10 @@ if (!jailChannel) {
         permissionOverwrites: [
             {
                 id: message.guild.id,
+                deny: ['ViewChannel']
+            },
+            {
+                id: jailedRoleId,
                 deny: ['ViewChannel']
             },
             {
