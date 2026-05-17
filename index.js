@@ -448,7 +448,6 @@ if (!matchedWord) return;
 
 await message.delete().catch(() => {});
 
-const jailedRoleId = process.env.JAILED_ROLE_ID;
 const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 const staffRoleId = '1371005644638912542';
 

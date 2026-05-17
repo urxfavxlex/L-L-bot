@@ -90,8 +90,6 @@ for (const channel of jailChannels.values()) {
             files: [attachment]
         });
     }
-
-    await channel.delete().catch(() => {});
 }
 
 await interaction.followUp({
