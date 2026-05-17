@@ -230,7 +230,7 @@ client.on('messageCreate', async message => {
         });
     }
 
-    await message.channel.send('🔒 | Closing jail in 3 seconds...');
+    await message.channel?.delete().catch(() => {});
 
     setTimeout(async () => {
         await message.channel.delete().catch(() => {});
@@ -458,6 +458,9 @@ const jailedRole = message.guild.roles.cache.get(autoJailedRoleId);
 
 if (!autoMember || !jailedRole) return;
 
+if (activeAutoJails.has(autoMember.id))return; 
+activeAutoJails.add(autoMember.id);
+
 const savedRoles = autoMember.roles.cache
     .filter(role =>
         role.id !== message.guild.id &&
@@ -538,7 +541,7 @@ content: `${autoMember} <@&${staffRoleId}>`,
     embeds: [jailEmbed],
     components: [jailButtons]
 });
-
+activeAutoJails.delete(autoMember.id);
 });
 
 client.on('interactionCreate', async interaction => {
