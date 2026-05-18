@@ -349,57 +349,37 @@ client.on('messageCreate', async message => {
             return;
         }
 
-        // JAIL
-        if (message.content.startsWith(`${PREFIX}jail`)) {
-            if (!message.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-                return message.reply('No permission.');
-            }
+       // JAIL
+if (message.content.startsWith(`${PREFIX}jail`)) {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+        return message.reply('No permission.');
+    }
 
-            const member = message.mentions.members.first();
+    const member = message.mentions.members.first();
+    if (!member) return message.reply('Mention a user.');
+    if (!jailedRole) return message.reply('Jailed role missing.');
+    if (member.roles.cache.has(jailedRoleId)) return message.reply('Already jailed.');
 
-            if (!member) {
-                return message.reply('Mention a user.');
-            }
+    const jailKey = `${message.guild.id}-${member.id}`;
+    if (activeJails.has(jailKey)) return;
+    activeJails.add(jailKey); // ✅ lock BEFORE any awaits
 
-            if (!jailedRole) {
-                return message.reply('Jailed role missing.');
-            }
+    const args = message.content.trim().split(/\s+/);
+    const reason = args.slice(2).join(' ') || 'No reason provided';
 
-            if (member.roles.cache.has(jailedRoleId)) {
-                return message.reply('Already jailed.');
-            }
+    await saveRoles(member, jailedRoleId);
+    await removeRolesAndJail(member, jailedRole);
 
-            const existingChannel = message.guild.channels.cache.find(ch => ch.name === jailChannelName(member));
-            if (existingChannel) return;
-            const jailKey = `${message.guild.id}-${member.id}`;
+    const jailChannel = await createOrGetJailChannel(message.guild, member, reason);
 
-            if (activeJails.has(jailKey)) return;
+    await message.channel.send(`🚨 | Sent ${member} to jail [${jailChannel}]`).catch(() => {});
 
-            activeJails.add(jailKey);
+    setTimeout(() => {
+        activeJails.delete(jailKey);
+    }, 5000);
 
-            const args = message.content.trim().split(/\s+/);
-            const reason = args.slice(2).join(' ') || 'No reason provided';
-
-            await saveRoles(member, jailedRoleId);
-            await removeRolesAndJail(member, jailedRole);
-
-            const jailChannel = await createOrGetJailChannel(
-                message.guild,
-                member,
-                reason
-            );
-
-            await message.channel.send(
-                `🚨 | Sent ${member} to jail [${jailChannel}]`
-            ).catch(() => {});
-
-            setTimeout(() => {
-                activeJails.delete(jailKey);
-            }, 5000);
-
-            return;
-        }
-
+    return;
+}
         // USERINFO
         if (message.content.startsWith(`${PREFIX}userinfo`)) {
             const args = message.content.trim().split(/ +/);
