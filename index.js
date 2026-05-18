@@ -370,6 +370,7 @@ client.on('messageCreate', async message => {
             }
 
             const existingChannel = message.guild.channels.cache.find(ch => ch.name === jailChannelName(member));
+            console.log(`[JAIL] triggered by ${message.author.tag} at ${Date.now()}`);
             if (existingChannel) return;
             const jailKey = `${message.guild.id}-${member.id}`;
 
