@@ -35,7 +35,6 @@ const PREFIX = ',';
 const activeJails = new Set();
 const activeAutoJails = new Set();
 const activeUnjails = new Set();
-const activeChannelCreations = new Set();
 
 const STAFF_ROLE_ID = '1371005644638912542';
 
@@ -106,11 +105,6 @@ async function createOrGetJailChannel(guild, member, reason) {
     const jailedRoleId = process.env.JAILED_ROLE_ID;
     const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 
-    const creationKey = `${guild.id}-${member.id}`;
-    if (activeChannelCreations.has(creationKey)) return null;
-    activeChannelCreations.add(creationKey);
-    setTimeout(() => activeChannelCreations.delete(creationKey), 10000);
-
     await guild.channels.fetch().catch(() => {});
 
     let jailChannel = guild.channels.cache.find(
@@ -126,23 +120,51 @@ async function createOrGetJailChannel(guild, member, reason) {
         type: ChannelType.GuildText,
         parent: jailCategoryId,
         permissionOverwrites: [
-            { id: guild.id, deny: ['ViewChannel'] },
-            { id: jailedRoleId, deny: ['ViewChannel'] },
-            { id: member.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] },
-            { id: STAFF_ROLE_ID, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles'] }
+            {
+                id: guild.id,
+                deny: ['ViewChannel']
+            },
+            {
+                id: jailedRoleId,
+                deny: ['ViewChannel']
+            },
+            {
+                id: member.id,
+                allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+            },
+            {
+                id: STAFF_ROLE_ID,
+                allow: [
+                    'ViewChannel',
+                    'SendMessages',
+                    'ReadMessageHistory',
+                    'ManageMessages',
+                    'AttachFiles'
+                ]
+            }
         ]
     });
 
     const jailEmbed = new EmbedBuilder()
         .setTitle('Jail')
         .setDescription('Get jailed nerd. A member of staff will be with you shortly.')
-        .addFields({ name: 'Reason', value: reason })
+        .addFields({
+            name: 'Reason',
+            value: reason
+        })
         .setColor('#ff4da6')
         .setTimestamp();
 
     const jailButtons = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`claim_jail_${member.id}`).setLabel('Claim').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId(`close_jail_${member.id}`).setLabel('Close').setStyle(ButtonStyle.Danger)
+        new ButtonBuilder()
+            .setCustomId(`claim_jail_${member.id}`)
+            .setLabel('Claim')
+            .setStyle(ButtonStyle.Primary),
+
+        new ButtonBuilder()
+            .setCustomId(`close_jail_${member.id}`)
+            .setLabel('Close')
+            .setStyle(ButtonStyle.Danger)
     );
 
     await jailChannel.send({
@@ -158,23 +180,25 @@ async function closeJailChannel(channel, closedBy) {
     const logChannel = channel.guild.channels.cache.get(process.env.MOD_LOG_CHANNEL_ID);
 
     if (logChannel) {
-        try {
-            const attachment = await discordTranscripts.createTranscript(channel, {
-                limit: -1,
-                returnType: 'attachment',
-                filename: `${channel.name}.html`
-            });
+        const attachment = await discordTranscripts.createTranscript(channel, {
+            limit: -1,
+            returnType: 'attachment',
+            filename: `${channel.name}.html`
+        });
 
-            const embed = new EmbedBuilder()
-                .setTitle('Jail Transcript')
-                .setDescription(`**Channel:** ${channel.name}\n**Closed By:** ${closedBy}`)
-                .setColor('#ff4da6')
-                .setTimestamp();
+        const embed = new EmbedBuilder()
+            .setTitle('Jail Transcript')
+            .setDescription(
+                `**Channel:** ${channel.name}\n` +
+                `**Closed By:** ${closedBy}`
+            )
+            .setColor('#ff4da6')
+            .setTimestamp();
 
-            await logChannel.send({ embeds: [embed], files: [attachment] }).catch(() => {});
-        } catch (err) {
-            console.error('Transcript error:', err.message);
-        }
+        await logChannel.send({
+            embeds: [embed],
+            files: [attachment]
+        }).catch(() => {});
     }
 
     await channel.delete().catch(() => {});
@@ -191,11 +215,17 @@ client.on('interactionCreate', async interaction => {
             }
 
             if (interaction.customId.startsWith('claim_jail_')) {
-                return interaction.reply({ content: `🔒 | ${interaction.user} claimed this jail.`, ephemeral: false });
+                return interaction.reply({
+                    content: `🔒 | ${interaction.user} claimed this jail.`,
+                    ephemeral: false
+                });
             }
 
             if (interaction.customId.startsWith('close_jail_')) {
-                return interaction.reply({ content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`, ephemeral: true });
+                return interaction.reply({
+                    content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`,
+                    ephemeral: true
+                });
             }
 
             if (interaction.customId.startsWith('copyroles_')) {
@@ -209,7 +239,10 @@ client.on('interactionCreate', async interaction => {
                     .map(role => role.id)
                     .join(', ');
 
-                return interaction.reply({ content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``, ephemeral: true });
+                return interaction.reply({
+                    content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``,
+                    ephemeral: true
+                });
             }
 
             return;
@@ -247,14 +280,19 @@ client.on('messageCreate', async message => {
             if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
                 return message.reply('You do not have permission to close jails.');
             }
+
             if (!message.channel || !message.channel.name?.startsWith('jail-')) {
                 return message.reply('This is not a jail channel.');
             }
+
             const channelToClose = message.channel;
+
             await channelToClose.send('🔒 | Saving transcript and closing jail...').catch(() => {});
+
             setTimeout(async () => {
                 await closeJailChannel(channelToClose, message.author);
             }, 1500);
+
             return;
         }
 
@@ -263,15 +301,21 @@ client.on('messageCreate', async message => {
             if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
                 return message.reply('You do not have permission to unjail members.');
             }
+
             if (!message.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
                 return message.reply('No permission.');
             }
+
             const member = message.mentions.members.first();
-            if (!member) return message.reply('Mention a user.');
-            if (!member.roles.cache.has(jailedRoleId)) return message.reply('That user is not jailed.');
+
+            if (!member) {
+                return message.reply('Mention a user.');
+            }
 
             const lockKey = `${message.guild.id}-${member.id}`;
+
             if (activeUnjails.has(lockKey)) return;
+
             activeUnjails.add(lockKey);
 
             if (message.channel) {
@@ -280,18 +324,28 @@ client.on('messageCreate', async message => {
 
             await member.roles.remove(jailedRoleId).catch(() => {});
 
-            const row = db.prepare(`SELECT roles FROM jailed_users WHERE user_id = ?`).get(member.id);
+            const row = db.prepare(`
+                SELECT roles FROM jailed_users
+                WHERE user_id = ?
+            `).get(member.id);
+
             if (row) {
                 const roles = JSON.parse(row.roles);
                 await member.roles.add(roles).catch(() => {});
-                db.prepare(`DELETE FROM jailed_users WHERE user_id = ?`).run(member.id);
+                db.prepare(`
+                    DELETE FROM jailed_users
+                    WHERE user_id = ?
+                `).run(member.id);
             }
 
             if (message.channel) {
                 await message.channel.send(`✅ | Released ${member} from jail.`).catch(() => {});
             }
 
-            setTimeout(() => { activeUnjails.delete(lockKey); }, 5000);
+            setTimeout(() => {
+                activeUnjails.delete(lockKey);
+            }, 5000);
+
             return;
         }
 
@@ -300,16 +354,25 @@ client.on('messageCreate', async message => {
             if (!message.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
                 return message.reply('No permission.');
             }
-            const member = message.mentions.members.first();
-            if (!member) return message.reply('Mention a user.');
-            if (!jailedRole) return message.reply('Jailed role missing.');
-            if (member.roles.cache.has(jailedRoleId)) return message.reply('Already jailed.');
 
-            const existingChannel = message.guild.channels.cache.find(ch => ch.name === jailChannelName(member));
-            if (existingChannel) return;
+            const member = message.mentions.members.first();
+
+            if (!member) {
+                return message.reply('Mention a user.');
+            }
+
+            if (!jailedRole) {
+                return message.reply('Jailed role missing.');
+            }
+
+            if (member.roles.cache.has(jailedRoleId)) {
+                return message.reply('Already jailed.');
+            }
 
             const jailKey = `${message.guild.id}-${member.id}`;
+
             if (activeJails.has(jailKey)) return;
+
             activeJails.add(jailKey);
 
             const args = message.content.trim().split(/\s+/);
@@ -318,17 +381,27 @@ client.on('messageCreate', async message => {
             await saveRoles(member, jailedRoleId);
             await removeRolesAndJail(member, jailedRole);
 
-            const jailChannel = await createOrGetJailChannel(message.guild, member, reason);
+            const jailChannel = await createOrGetJailChannel(
+                message.guild,
+                member,
+                reason
+            );
 
-            await message.channel.send(`🚨 | Sent ${member} to jail [${jailChannel}]`).catch(() => {});
+            await message.channel.send(
+                `🚨 | Sent ${member} to jail [${jailChannel}]`
+            ).catch(() => {});
 
-            setTimeout(() => { activeJails.delete(jailKey); }, 5000);
+            setTimeout(() => {
+                activeJails.delete(jailKey);
+            }, 5000);
+
             return;
         }
 
         // USERINFO
         if (message.content.startsWith(`${PREFIX}userinfo`)) {
             const args = message.content.trim().split(/ +/);
+
             const member =
                 message.mentions.members.first() ||
                 message.guild.members.cache.get(args[1]) ||
@@ -341,11 +414,13 @@ client.on('messageCreate', async message => {
 
             const createdTimestamp = Math.floor(member.user.createdTimestamp / 1000);
             const joinedTimestamp = Math.floor(member.joinedTimestamp / 1000);
+
             const boosting = member.premiumSince
                 ? `<t:${Math.floor(member.premiumSinceTimestamp / 1000)}:R>`
                 : 'Not Boosting';
 
             const perms = [];
+
             if (member.permissions.has(PermissionsBitField.Flags.Administrator)) perms.push('Administrator');
             if (member.permissions.has(PermissionsBitField.Flags.ManageGuild)) perms.push('Manage Server');
             if (member.permissions.has(PermissionsBitField.Flags.ManageRoles)) perms.push('Manage Roles');
@@ -359,17 +434,27 @@ client.on('messageCreate', async message => {
                 .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
                 .setDescription(
                     `# User Info • ${member.displayName}\n\n` +
-                    `**User:** ${member.user.tag}\n**Mention:** ${member}\n**ID:** \`${member.id}\`\n\n` +
-                    `━━━━━━━━━━━━━━━━━━━━\n\n## Member Info\n\n` +
-                    `**Nickname:** ${member.nickname || 'None'}\n**Color:** ${member.displayHexColor}\n**Boosting:** ${boosting}\n\n` +
+                    `**User:** ${member.user.tag}\n` +
+                    `**Mention:** ${member}\n` +
+                    `**ID:** \`${member.id}\`\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                    `## Member Info\n\n` +
+                    `**Nickname:** ${member.nickname || 'None'}\n` +
+                    `**Color:** ${member.displayHexColor}\n` +
+                    `**Boosting:** ${boosting}\n\n` +
                     `**Joined Server:**\n<t:${joinedTimestamp}:F>\n<t:${joinedTimestamp}:R>\n\n` +
                     `**Account Created:**\n<t:${createdTimestamp}:F>\n<t:${createdTimestamp}:R>\n\n` +
-                    `━━━━━━━━━━━━━━━━━━━━\n\n## Significant Permissions\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                    `## Significant Permissions\n\n` +
                     `${perms.length ? perms.join('\n') : 'None'}\n\n` +
-                    `━━━━━━━━━━━━━━━━━━━━\n\n## Roles (${roles.length})\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+                    `## Roles (${roles.length})\n\n` +
                     `${roles.length ? roles.join(', ') : 'No roles'}`
                 )
-                .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+                .setFooter({
+                    text: `Requested by ${message.author.tag}`,
+                    iconURL: message.author.displayAvatarURL({ dynamic: true })
+                })
                 .setTimestamp();
 
             const row = new ActionRowBuilder().addComponents(
@@ -380,7 +465,10 @@ client.on('messageCreate', async message => {
                     .setStyle(ButtonStyle.Secondary)
             );
 
-            return message.reply({ embeds: [embed], components: [row] }).catch(() => {});
+            return message.reply({
+                embeds: [embed],
+                components: [row]
+            }).catch(() => {});
         }
 
         // IGNORE OTHER PREFIX COMMANDS
@@ -388,21 +476,33 @@ client.on('messageCreate', async message => {
 
         // AUTOMOD
         const content = message.content.toLowerCase();
-        const matchedWord = blockedWords.find(word => content.includes(word.toLowerCase()));
+
+        const matchedWord = blockedWords.find(word =>
+            content.includes(word.toLowerCase())
+        );
+
         if (!matchedWord) return;
 
         const member = message.member;
+
         if (!member || !jailedRole) return;
         if (member.roles.cache.has(jailedRoleId)) return;
         if (activeAutoJails.has(member.id)) return;
 
         activeAutoJails.add(member.id);
+
         await message.delete().catch(() => {});
         await saveRoles(member, jailedRoleId);
         await removeRolesAndJail(member, jailedRole);
-        await createOrGetJailChannel(message.guild, member, `Automod: ${matchedWord}`);
+        await createOrGetJailChannel(
+            message.guild,
+            member,
+            `Automod: ${matchedWord}`
+        );
 
-        setTimeout(() => { activeAutoJails.delete(member.id); }, 5000);
+        setTimeout(() => {
+            activeAutoJails.delete(member.id);
+        }, 5000);
 
     } catch (error) {
         console.error('Message handler error:', error);
