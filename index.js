@@ -311,7 +311,7 @@ client.on('messageCreate', async message => {
             if (!member) {
                 return message.reply('Mention a user.');
             }
-
+            if (!member.roles.cache.has(jailedRoleId)) return message.reply('That user is not jailed.');
             const lockKey = `${message.guild.id}-${member.id}`;
 
             if (activeUnjails.has(lockKey)) return;
