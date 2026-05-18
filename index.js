@@ -35,6 +35,7 @@ const PREFIX = ',';
 const activeJails = new Set();
 const activeAutoJails = new Set();
 const activeUnjails = new Set();
+const activeChannelCreations = new Set();
 
 const STAFF_ROLE_ID = '1371005644638912542';
 
@@ -105,6 +106,10 @@ async function createOrGetJailChannel(guild, member, reason) {
     const jailedRoleId = process.env.JAILED_ROLE_ID;
     const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 
+    const creationKey = `${guild.id}-${member.id}`;
+    if (activeChannelCreations.has(creationKey)) return null;
+    activeChannelCreations.add(creationKey);
+    setTimeout(() => activeChannelCreations.delete(creationKey), 10000);
     await guild.channels.fetch().catch(() => {});
 
     let jailChannel = guild.channels.cache.find(
