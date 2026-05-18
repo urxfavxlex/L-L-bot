@@ -298,7 +298,6 @@ client.on('messageCreate', async message => {
                 await closeJailChannel(channelToClose, message.author);
             }, 1500);
 
-            console.log(`[UNJAIL] triggered by ${message.author.tag} at ${Date.now()}`);
             return;
         }
 
@@ -314,6 +313,7 @@ client.on('messageCreate', async message => {
 
             const member = message.mentions.members.first();
 
+            console.log(`[UNJAIL] triggered by ${message.author.tag} at ${Date.now()}`);
             if (!member) {
                 return message.reply('Mention a user.');
             }
