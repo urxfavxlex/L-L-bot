@@ -36,15 +36,16 @@ const activeJails = new Set();
 const activeAutoJails = new Set();
 const activeUnjails = new Set();
 
+const activeVerifications = new Set();
 const STAFF_ROLE_ID = '1371005644638912542';
 
 const VERIFIED_FEMALE_ROLE_ID = '1371005088084000778';
-const VERIFIED_MALE_ROLE_ID = '1371005166576341002';
+const VERIFIED_MALE_ROLE_ID = '1371005022707515463';
 
-const VERIFIED_OTHER_ROLE_ID = 'PASTE_OTHER_ROLE_ID_HERE';
+const VERIFIED_OTHER_ROLE_ID = '1371005166576341002';
 
-const ID_VERIFIED_ROLE_ID = 'PASTE_ID_VERIFIED_ROLE_ID_HERE';
-const CROSS_VERIFIED_ROLE_ID = 'PASTE_CROSS_VERIFIED_ROLE_ID_HERE';
+const ID_VERIFIED_ROLE_ID = '1390387442401542440';
+const CROSS_VERIFIED_ROLE_ID = '1370618146544943165';
 
 const UNVERIFIED_ROLE_ID = '1250655963401289740';
 
@@ -568,6 +569,15 @@ if (message.content.startsWith(`${PREFIX}verify`)) {
     // ID VERIFY STAFF COMMAND
 if (message.content.startsWith(`${PREFIX}idv`)) {
 
+    const verifyKey = `idv-${message.id}`;
+    if (activeVerifications.has(verifyKey)) return;
+
+    activeVerifications.add(verifyKey);
+
+    setTimeout(() => {
+        activeVerifications.delete(verifyKey);
+    }, 5000);
+
     if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
         return message.reply('No permission.');
     }
@@ -576,7 +586,65 @@ if (message.content.startsWith(`${PREFIX}idv`)) {
     const member = message.mentions.members.first();
 
     if (!member) {
-        return message.reply('Usage: ,idv @user f/m/o');
+    return message.reply('Usage: ,idv @user f/m/o');
+}
+
+    const gender = args[2]?.toLowerCase();
+
+    let genderRole;
+
+    if (gender === 'f') genderRole = VERIFIED_FEMALE_ROLE_ID;
+    if (gender === 'm') genderRole = VERIFIED_MALE_ROLE_ID;
+    if (gender === 'o') genderRole = VERIFIED_OTHER_ROLE_ID;
+
+    console.log('IDV command ran');
+    console.log('Target:', member?.user?.tag);
+    console.log('Gender arg:', args[2]);
+    console.log('ID role:', ID_VERIFIED_ROLE_ID);
+    console.log('Gender role:', genderRole);
+    console.log('Bot highest role:', message.guild.members.me.roles.highest.name);
+
+    if (!genderRole) {
+    return message.reply('Use f, m, or o.');
+}
+
+  try {
+    await member.roles.add(ID_VERIFIED_ROLE_ID);
+    await member.roles.add(genderRole);
+    await member.roles.remove(UNVERIFIED_ROLE_ID);
+
+    return message.channel.send(
+        `✅ | ${member} has been ID verified.`
+    );
+} catch (err) {
+    console.error('IDV role error:', err);
+    return message.reply(`Role error: ${err.message}`);
+}
+}
+
+        // CROSS VERIFY STAFF COMMAND
+if (message.content.startsWith(`${PREFIX}cv`)) {
+
+    const verifyKey = `cv-${message.id}`;
+
+    if (activeVerifications.has(verifyKey)) return;
+
+    activeVerifications.add(verifyKey);
+
+    setTimeout(() => {
+        activeVerifications.delete(verifyKey);
+    }, 5000);
+
+    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+        return message.reply('No permission.');
+    }
+
+    const args = message.content.trim().split(/ +/);
+
+    const member = message.mentions.members.first();
+
+    if (!member) {
+        return message.reply('Usage: ,cv @user f/m/o');
     }
 
     const gender = args[2]?.toLowerCase();
@@ -591,33 +659,24 @@ if (message.content.startsWith(`${PREFIX}idv`)) {
         return message.reply('Use f, m, or o.');
     }
 
-    await member.roles.add([
-        ID_VERIFIED_ROLE_ID,
-        genderRole
-    ]).catch(() => {});
+    try {
 
-    await member.roles.remove(UNVERIFIED_ROLE_ID).catch(() => {});
+        await member.roles.add(ID_VERIFIED_ROLE_ID);
 
-    return message.channel.send(
-        `✅ | ${member} has been ID verified.`
-    );
-}
+        await member.roles.add(CROSS_VERIFIED_ROLE_ID);
 
-// CROSS VERIFY STAFF COMMAND
-if (message.content.startsWith(`${PREFIX}cv`)) {
+        await member.roles.add(genderRole);
 
-    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
-        return message.reply('No permission.');
+        await member.roles.remove(UNVERIFIED_ROLE_ID);
+
+    } catch (err) {
+
+        console.error('CV role error:', err);
+
+        return message.reply(
+            `Role error: ${err.message}`
+        );
     }
-
-    const member = message.mentions.members.first();
-
-    if (!member) {
-        return message.reply('Mention a user.');
-    }
-
-    await member.roles.add(CROSS_VERIFIED_ROLE_ID).catch(() => {});
-    await member.roles.remove(UNVERIFIED_ROLE_ID).catch(() => {});
 
     return message.channel.send(
         `✅ | ${member} has been cross verified.`
