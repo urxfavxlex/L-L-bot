@@ -49,6 +49,9 @@ const CROSS_VERIFIED_ROLE_ID = '1370618146544943165';
 
 const UNVERIFIED_ROLE_ID = '1250655963401289740';
 
+const VERIFY_CATEGORY_ID = '370642326422028298';
+const VERIFY_LOG_CHANNEL_ID = '1370630712935583744';
+
 client.once('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
@@ -224,159 +227,189 @@ async function closeJailChannel(channel, closedBy) {
 client.on('interactionCreate', async interaction => {
     try {
         if (interaction.isButton()) {
-            const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
-            if (!isStaff) {
-                return interaction.reply({ content: 'You do not have permission to use this.', ephemeral: true });
-            }
 
-            if (interaction.customId.startsWith('claim_jail_')) {
-                return interaction.reply({
-                    content: `🔒 | ${interaction.user} claimed this jail.`,
-                    ephemeral: false
-                });
-            }
+    // OPEN VERIFY TICKETS
+    if (
+        interaction.customId === 'open_id_verify' ||
+        interaction.customId === 'open_cross_verify'
+    ) {
 
-            if (interaction.customId.startsWith('close_jail_')) {
-                return interaction.reply({
-                    content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`,
-                    ephemeral: true
-                });
-            }
+        const type =
+            interaction.customId === 'open_id_verify'
+                ? 'id'
+                : 'cross';
 
-            if (interaction.customId.startsWith('copyroles_')) {
-                const targetId = interaction.customId.split('_')[1];
-                const guildMember = await interaction.guild.members.fetch(targetId).catch(() => null);
-                if (!guildMember) return interaction.reply({ content: 'User not found.', ephemeral: true });
+        const existingChannel = interaction.guild.channels.cache.find(
+            ch => ch.name === verifyChannelName(interaction.member, type)
+        );
 
-                const ids = guildMember.roles.cache
-                    .filter(role => role.id !== interaction.guild.id)
-                    .sort((a, b) => b.position - a.position)
-                    .map(role => role.id)
-                    .join(', ');
-
-                return interaction.reply({
-                    content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``,
-                    ephemeral: true
-                });
-            }
-
-            return;
+        if (existingChannel) {
+            return interaction.reply({
+                content: `You already have an open verification ticket: ${existingChannel}`,
+                ephemeral: true
+            });
         }
-        
-        // OPEN VERIFY TICKETS
-if (
-    interaction.customId === 'open_id_verify' ||
-    interaction.customId === 'open_cross_verify' ||
-    interaction.customId === 'open_vc_verify'
-) {
 
-    const type =
-        interaction.customId === 'open_id_verify'
-            ? 'id'
-            : interaction.customId === 'open_cross_verify'
-            ? 'cross'
-            : 'vc';
+        const channel = await interaction.guild.channels.create({
+            name: verifyChannelName(interaction.member, type),
+            type: ChannelType.GuildText,
+            parent: VERIFY_CATEGORY_ID,
 
-    const existingChannel = interaction.guild.channels.cache.find(
-        ch => ch.name === verifyChannelName(interaction.member, type)
-    );
+            permissionOverwrites: [
+                {
+                    id: interaction.guild.id,
+                    deny: ['ViewChannel']
+                },
+                {
+                    id: interaction.member.id,
+                    allow: [
+                        'ViewChannel',
+                        'SendMessages',
+                        'ReadMessageHistory',
+                        'AttachFiles'
+                    ]
+                },
+                {
+                    id: STAFF_ROLE_ID,
+                    allow: [
+                        'ViewChannel',
+                        'SendMessages',
+                        'ReadMessageHistory',
+                        'ManageMessages',
+                        'AttachFiles'
+                    ]
+                }
+            ]
+        });
 
-    if (existingChannel) {
+        const embed = new EmbedBuilder()
+            .setTitle(`${type.toUpperCase()} Verification`)
+            .setDescription(
+                `${interaction.member}, a staff member will be with you shortly.\n\n` +
+                `Please do not ping staff repeatedly.`
+            )
+            .setColor('#B22959')
+            .setTimestamp();
+
+        const row = new ActionRowBuilder().addComponents(
+
+            new ButtonBuilder()
+                .setCustomId(`claim_verify_${interaction.member.id}`)
+                .setLabel('Claim')
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(`vc_verify_${interaction.member.id}`)
+                .setLabel('VC Verify')
+                .setEmoji('🎙️')
+                .setStyle(ButtonStyle.Success),
+
+            new ButtonBuilder()
+                .setCustomId(`close_verify_${interaction.member.id}`)
+                .setLabel('Close')
+                .setStyle(ButtonStyle.Danger)
+        );
+
+        await channel.send({
+            content: `${interaction.member} <@&${STAFF_ROLE_ID}>`,
+            embeds: [embed],
+            components: [row]
+        });
+
         return interaction.reply({
-            content: `You already have an open verification ticket: ${existingChannel}`,
+            content: `✅ | Your verification ticket has been created: ${channel}`,
             ephemeral: true
         });
     }
 
-    const channel = await interaction.guild.channels.create({
-        name: verifyChannelName(interaction.member, type),
-        type: ChannelType.GuildText,
+    const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
 
-        permissionOverwrites: [
-            {
-                id: interaction.guild.id,
-                deny: ['ViewChannel']
-            },
-            {
-                id: interaction.member.id,
-                allow: [
-                    'ViewChannel',
-                    'SendMessages',
-                    'ReadMessageHistory',
-                    'AttachFiles'
-                ]
-            },
-            {
-                id: STAFF_ROLE_ID,
-                allow: [
-                    'ViewChannel',
-                    'SendMessages',
-                    'ReadMessageHistory',
-                    'ManageMessages',
-                    'AttachFiles'
-                ]
-            }
-        ]
-    });
+    if (!isStaff) {
+        return interaction.reply({
+            content: 'No permission.',
+            ephemeral: true
+        });
+    }
 
-    const embed = new EmbedBuilder()
-        .setTitle(`${type.toUpperCase()} Verification`)
-        .setDescription(
-            `${interaction.member}, a staff member will be with you shortly.\n\n` +
-            `Please do not ping staff repeatedly.`
-        )
-        .setColor('#B22959')
-        .setTimestamp();
+    // CLAIM VERIFY
+    if (interaction.customId.startsWith('claim_verify_')) {
 
-    const row = new ActionRowBuilder().addComponents(
+        return interaction.reply({
+            content: `🔒 | ${interaction.user} claimed this verification ticket.`,
+            ephemeral: false
+        });
+    }
 
-        new ButtonBuilder()
-            .setCustomId(`claim_verify_${interaction.member.id}`)
-            .setLabel('Claim')
-            .setStyle(ButtonStyle.Primary),
+    // VC VERIFY
+    if (interaction.customId.startsWith('vc_verify_')) {
 
-        new ButtonBuilder()
-            .setCustomId(`close_verify_${interaction.member.id}`)
-            .setLabel('Close')
-            .setStyle(ButtonStyle.Danger)
-    );
+        return interaction.reply({
+            content: `🎙️ | ${interaction.user} marked this ticket for VC verification.`,
+            ephemeral: false
+        });
+    }
 
-    await channel.send({
-        content: `${interaction.member} <@&${STAFF_ROLE_ID}>`,
-        embeds: [embed],
-        components: [row]
-    });
+    // CLOSE VERIFY
+    if (interaction.customId.startsWith('close_verify_')) {
 
-    return interaction.reply({
-        content: `✅ | Your verification ticket has been created: ${channel}`,
-        ephemeral: true
-    });
-}
+        await interaction.reply({
+            content: '🔒 | Closing verification ticket...',
+            ephemeral: false
+        });
 
-// CLAIM VERIFY
-if (interaction.customId.startsWith('claim_verify_')) {
+        setTimeout(async () => {
+            await interaction.channel.delete().catch(() => {});
+        }, 1500);
 
-    return interaction.reply({
-        content: `🔒 | ${interaction.user} claimed this verification ticket.`,
-        ephemeral: false
-    });
-}
+        return;
+    }
 
-// CLOSE VERIFY
-if (interaction.customId.startsWith('close_verify_')) {
+    // CLAIM JAIL
+    if (interaction.customId.startsWith('claim_jail_')) {
+        return interaction.reply({
+            content: `🔒 | ${interaction.user} claimed this jail.`,
+            ephemeral: false
+        });
+    }
 
-    await interaction.reply({
-        content: '🔒 | Closing verification ticket...',
-        ephemeral: false
-    });
+    // CLOSE JAIL
+    if (interaction.customId.startsWith('close_jail_')) {
+        return interaction.reply({
+            content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`,
+            ephemeral: true
+        });
+    }
 
-    setTimeout(async () => {
-        await interaction.channel.delete().catch(() => {});
-    }, 1500);
+    // COPY ROLES
+    if (interaction.customId.startsWith('copyroles_')) {
+
+        const targetId = interaction.customId.split('_')[1];
+
+        const guildMember = await interaction.guild.members
+            .fetch(targetId)
+            .catch(() => null);
+
+        if (!guildMember) {
+            return interaction.reply({
+                content: 'User not found.',
+                ephemeral: true
+            });
+        }
+
+        const ids = guildMember.roles.cache
+            .filter(role => role.id !== interaction.guild.id)
+            .sort((a, b) => b.position - a.position)
+            .map(role => role.id)
+            .join(', ');
+
+        return interaction.reply({
+            content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``,
+            ephemeral: true
+        });
+    }
 
     return;
 }
-
         if (!interaction.isChatInputCommand()) return;
 
         const command = client.commands.get(interaction.commandName);
@@ -386,11 +419,6 @@ if (interaction.customId.startsWith('close_verify_')) {
 
     } catch (error) {
         console.error(error);
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'There was an error.', ephemeral: true }).catch(() => {});
-        } else {
-            await interaction.reply({ content: 'There was an error.', ephemeral: true }).catch(() => {});
-        }
     }
 });
 
@@ -527,21 +555,29 @@ client.on('messageCreate', async message => {
             return;
         }
 
-        // VERIFY PANEL
+    // VERIFY PANEL
+
 if (message.content.startsWith(`${PREFIX}verify`)) {
 
+    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+        return message.reply('No permission.');
+    }
+
     const embed = new EmbedBuilder()
-        .setTitle('Verification')
+        .setTitle('୨୧・Verification System・୨୧')
         .setDescription(
-            'Choose your verification type below.\n\n' +
-            '🪪 ID Verify\n' +
-            '🔁 Cross Verify\n' +
-            '🎙️ VC Verify'
+            'Welcome to **Leather & Lace** verification.\n\n' +
+            '💕 **Cross Verification**\n' +
+            '💙 **ID Verification**\n\n' +
+            'Please check trusted servers before choosing cross verification.\n\n' +
+            'Click a button below to open a verification ticket.\n\n' +
+            'Staff will assist you as soon as possible.'
         )
         .setColor('#B22959')
         .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
+
         new ButtonBuilder()
             .setCustomId('open_id_verify')
             .setLabel('ID Verify')
@@ -552,13 +588,7 @@ if (message.content.startsWith(`${PREFIX}verify`)) {
             .setCustomId('open_cross_verify')
             .setLabel('Cross Verify')
             .setEmoji('🔁')
-            .setStyle(ButtonStyle.Secondary),
-
-        new ButtonBuilder()
-            .setCustomId('open_vc_verify')
-            .setLabel('VC Verify')
-            .setEmoji('🎙️')
-            .setStyle(ButtonStyle.Success)
+            .setStyle(ButtonStyle.Secondary)
     );
 
     return message.channel.send({
@@ -566,6 +596,7 @@ if (message.content.startsWith(`${PREFIX}verify`)) {
         components: [row]
     });
 }
+        
     // ID VERIFY STAFF COMMAND
 if (message.content.startsWith(`${PREFIX}idv`)) {
 
