@@ -49,7 +49,7 @@ const CROSS_VERIFIED_ROLE_ID = '1370618146544943165';
 
 const UNVERIFIED_ROLE_ID = '1250655963401289740';
 
-const VERIFY_CATEGORY_ID = '370642326422028298';
+const VERIFY_CATEGORY_ID = '1370642326422028298';
 const VERIFY_LOG_CHANNEL_ID = '1370630712935583744';
 
 client.once('clientReady', () => {
@@ -418,10 +418,21 @@ client.on('interactionCreate', async interaction => {
         await command.execute(interaction);
 
     } catch (error) {
-        console.error(error);
+        console.error('Interaction error:', error);
+
+if (interaction.replied || interaction.deferred) {
+    await interaction.followUp({
+        content: 'There was an error handling this interaction.',
+        ephemeral: true
+    }).catch(() => {});
+} else {
+    await interaction.reply({
+        content: 'There was an error handling this interaction.',
+        ephemeral: true
+    }).catch(() => {});
+    }
     }
 });
-
 // ─── Message Handler ───────────────────────────────────────────────────────────
 
 client.on('messageCreate', async message => {
