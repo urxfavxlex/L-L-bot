@@ -38,6 +38,16 @@ const activeUnjails = new Set();
 
 const STAFF_ROLE_ID = '1371005644638912542';
 
+const VERIFIED_FEMALE_ROLE_ID = '1371005088084000778';
+const VERIFIED_MALE_ROLE_ID = '1371005166576341002';
+
+const VERIFIED_OTHER_ROLE_ID = 'PASTE_OTHER_ROLE_ID_HERE';
+
+const ID_VERIFIED_ROLE_ID = 'PASTE_ID_VERIFIED_ROLE_ID_HERE';
+const CROSS_VERIFIED_ROLE_ID = 'PASTE_CROSS_VERIFIED_ROLE_ID_HERE';
+
+const UNVERIFIED_ROLE_ID = '1250655963401289740';
+
 client.once('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
@@ -66,6 +76,10 @@ if (fs.existsSync(commandsPath)) {
 
 function jailChannelName(member) {
     return `jail-${member.user.username.toLowerCase()}`;
+}
+
+function verifyChannelName(member, type) {
+    return `${type}-verify-${member.user.username.toLowerCase()}`;
 }
 
 async function saveRoles(member, jailedRoleId) {
@@ -247,6 +261,120 @@ client.on('interactionCreate', async interaction => {
 
             return;
         }
+        
+        // OPEN VERIFY TICKETS
+if (
+    interaction.customId === 'open_id_verify' ||
+    interaction.customId === 'open_cross_verify' ||
+    interaction.customId === 'open_vc_verify'
+) {
+
+    const type =
+        interaction.customId === 'open_id_verify'
+            ? 'id'
+            : interaction.customId === 'open_cross_verify'
+            ? 'cross'
+            : 'vc';
+
+    const existingChannel = interaction.guild.channels.cache.find(
+        ch => ch.name === verifyChannelName(interaction.member, type)
+    );
+
+    if (existingChannel) {
+        return interaction.reply({
+            content: `You already have an open verification ticket: ${existingChannel}`,
+            ephemeral: true
+        });
+    }
+
+    const channel = await interaction.guild.channels.create({
+        name: verifyChannelName(interaction.member, type),
+        type: ChannelType.GuildText,
+
+        permissionOverwrites: [
+            {
+                id: interaction.guild.id,
+                deny: ['ViewChannel']
+            },
+            {
+                id: interaction.member.id,
+                allow: [
+                    'ViewChannel',
+                    'SendMessages',
+                    'ReadMessageHistory',
+                    'AttachFiles'
+                ]
+            },
+            {
+                id: STAFF_ROLE_ID,
+                allow: [
+                    'ViewChannel',
+                    'SendMessages',
+                    'ReadMessageHistory',
+                    'ManageMessages',
+                    'AttachFiles'
+                ]
+            }
+        ]
+    });
+
+    const embed = new EmbedBuilder()
+        .setTitle(`${type.toUpperCase()} Verification`)
+        .setDescription(
+            `${interaction.member}, a staff member will be with you shortly.\n\n` +
+            `Please do not ping staff repeatedly.`
+        )
+        .setColor('#B22959')
+        .setTimestamp();
+
+    const row = new ActionRowBuilder().addComponents(
+
+        new ButtonBuilder()
+            .setCustomId(`claim_verify_${interaction.member.id}`)
+            .setLabel('Claim')
+            .setStyle(ButtonStyle.Primary),
+
+        new ButtonBuilder()
+            .setCustomId(`close_verify_${interaction.member.id}`)
+            .setLabel('Close')
+            .setStyle(ButtonStyle.Danger)
+    );
+
+    await channel.send({
+        content: `${interaction.member} <@&${STAFF_ROLE_ID}>`,
+        embeds: [embed],
+        components: [row]
+    });
+
+    return interaction.reply({
+        content: `✅ | Your verification ticket has been created: ${channel}`,
+        ephemeral: true
+    });
+}
+
+// CLAIM VERIFY
+if (interaction.customId.startsWith('claim_verify_')) {
+
+    return interaction.reply({
+        content: `🔒 | ${interaction.user} claimed this verification ticket.`,
+        ephemeral: false
+    });
+}
+
+// CLOSE VERIFY
+if (interaction.customId.startsWith('close_verify_')) {
+
+    await interaction.reply({
+        content: '🔒 | Closing verification ticket...',
+        ephemeral: false
+    });
+
+    setTimeout(async () => {
+        await interaction.channel.delete().catch(() => {});
+    }, 1500);
+
+    return;
+}
 
         if (!interaction.isChatInputCommand()) return;
 
@@ -397,6 +525,104 @@ client.on('messageCreate', async message => {
 
             return;
         }
+
+        // VERIFY PANEL
+if (message.content.startsWith(`${PREFIX}verify`)) {
+
+    const embed = new EmbedBuilder()
+        .setTitle('Verification')
+        .setDescription(
+            'Choose your verification type below.\n\n' +
+            '🪪 ID Verify\n' +
+            '🔁 Cross Verify\n' +
+            '🎙️ VC Verify'
+        )
+        .setColor('#B22959')
+        .setTimestamp();
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('open_id_verify')
+            .setLabel('ID Verify')
+            .setEmoji('🪪')
+            .setStyle(ButtonStyle.Primary),
+
+        new ButtonBuilder()
+            .setCustomId('open_cross_verify')
+            .setLabel('Cross Verify')
+            .setEmoji('🔁')
+            .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
+            .setCustomId('open_vc_verify')
+            .setLabel('VC Verify')
+            .setEmoji('🎙️')
+            .setStyle(ButtonStyle.Success)
+    );
+
+    return message.channel.send({
+        embeds: [embed],
+        components: [row]
+    });
+}
+    // ID VERIFY STAFF COMMAND
+if (message.content.startsWith(`${PREFIX}idv`)) {
+
+    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+        return message.reply('No permission.');
+    }
+
+    const args = message.content.trim().split(/ +/);
+    const member = message.mentions.members.first();
+
+    if (!member) {
+        return message.reply('Usage: ,idv @user f/m/o');
+    }
+
+    const gender = args[2]?.toLowerCase();
+
+    let genderRole;
+
+    if (gender === 'f') genderRole = VERIFIED_FEMALE_ROLE_ID;
+    if (gender === 'm') genderRole = VERIFIED_MALE_ROLE_ID;
+    if (gender === 'o') genderRole = VERIFIED_OTHER_ROLE_ID;
+
+    if (!genderRole) {
+        return message.reply('Use f, m, or o.');
+    }
+
+    await member.roles.add([
+        ID_VERIFIED_ROLE_ID,
+        genderRole
+    ]).catch(() => {});
+
+    await member.roles.remove(UNVERIFIED_ROLE_ID).catch(() => {});
+
+    return message.channel.send(
+        `✅ | ${member} has been ID verified.`
+    );
+}
+
+// CROSS VERIFY STAFF COMMAND
+if (message.content.startsWith(`${PREFIX}cv`)) {
+
+    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+        return message.reply('No permission.');
+    }
+
+    const member = message.mentions.members.first();
+
+    if (!member) {
+        return message.reply('Mention a user.');
+    }
+
+    await member.roles.add(CROSS_VERIFIED_ROLE_ID).catch(() => {});
+    await member.roles.remove(UNVERIFIED_ROLE_ID).catch(() => {});
+
+    return message.channel.send(
+        `✅ | ${member} has been cross verified.`
+    );
+}
 
         // USERINFO
         if (message.content.startsWith(`${PREFIX}userinfo`)) {
