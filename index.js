@@ -67,6 +67,20 @@ const ADMIN_ROLE_ID = '1371004354680848385';
 const SERVER_MANAGER_ROLE_ID = '1371000386432925717';
 const COUNCIL_ROLE_ID = '1391303718665850960';
 
+const verifyPoses = [
+    'peace sign ✌️',
+    'thumbs up 👍',
+    'middle finger 🖕',
+    'hand heart 🫶',
+    'rock sign 🤘',
+    'salute 🫡',
+    'cover one eye',
+    'hold up 3 fingers',
+    'make an L with your hand',
+    'touch your nose'
+];
+
+
 client.once('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
@@ -218,7 +232,7 @@ async function createTicketChannel(
 
     if (existingChannel) {
 
-       return interaction.followUp({
+       return interaction.editReply({
     content:
         `You already have an open ${config.label.toLowerCase()} ticket: ${existingChannel}`,
     ephemeral: true
@@ -311,7 +325,7 @@ async function createTicketChannel(
         components: [row]
     });
 
-    return interaction.followUp({
+    return interaction.editReply({
         content: `✅ | Your ${config.label.toLowerCase()} ticket has been created: ${channel}`,
         ephemeral: true
     }).catch(() => {});
@@ -503,133 +517,104 @@ async function closeJailChannel(channel, closedBy) {
 
 client.on('interactionCreate', async interaction => {
     try {
-
         if (interaction.isButton()) {
-
             await interaction.deferReply({ ephemeral: true }).catch(() => {});
-
-      // no defer needed
 
             // OPEN VERIFY TICKETS
             if (
                 interaction.customId === 'open_id_verify' ||
                 interaction.customId === 'open_cross_verify'
             ) {
+                const type = interaction.customId === 'open_id_verify' ? 'id' : 'cross';
 
-                const type =
-                    interaction.customId === 'open_id_verify'
-                        ? 'id'
-                        : 'cross';
-
-                const existingChannel =
-                    interaction.guild.channels.cache.find(
-                        ch => ch.name === verifyChannelName(
-                            interaction.member,
-                            type
-                        )
-                    );
+                const existingChannel = interaction.guild.channels.cache.find(
+                    ch => ch.name === verifyChannelName(interaction.member, type)
+                );
 
                 if (existingChannel) {
-                    return interaction.followUp({
-                        content: `You already have an open verification ticket: ${existingChannel}`,
-                        ephemeral: true
+                    return interaction.editReply({
+                        content: `You already have an open verification ticket: ${existingChannel}`
                     }).catch(() => {});
                 }
 
-                const channel =
-                    await interaction.guild.channels.create({
-
-                        name: verifyChannelName(
-                            interaction.member,
-                            type
-                        ),
-
-                        type: ChannelType.GuildText,
-
-                        parent: VERIFY_CATEGORY_ID,
-
-                        permissionOverwrites: [
-                            {
-                                id: interaction.guild.id,
-                                deny: ['ViewChannel']
-                            },
-                            {
-                                id: interaction.member.id,
-                                allow: [
-                                    'ViewChannel',
-                                    'SendMessages',
-                                    'ReadMessageHistory',
-                                    'AttachFiles'
-                                ]
-                            },
-                            {
-                                id: STAFF_ROLE_ID,
-                                allow: [
-                                    'ViewChannel',
-                                    'SendMessages',
-                                    'ReadMessageHistory',
-                                    'ManageMessages',
-                                    'AttachFiles'
-                                ]
-                            }
-                        ]
-                    });
-
-                const embed = new EmbedBuilder()
-                    .setTitle(
-                        type === 'id'
-                            ? '𝗜𝗗 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻'
-                            : '𝗖𝗿𝗼𝘀𝘀 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻'
-                    )
-                    .setDescription(
-                        type === 'id'
-                            ? 'Please send your ID verification information below.'
-                            : 'Please send your cross verification information below.'
-                    )
-                    .setColor(
-                        type === 'id'
-                            ? '#ffb6d9'
-                            : '#8ecbff'
-                    )
-                    .setTimestamp();
-
-                const row =
-                    new ActionRowBuilder().addComponents(
-
-                        new ButtonBuilder()
-                            .setCustomId(
-                                `claim_verify_${interaction.member.id}`
-                            )
-                            .setLabel('Claim')
-                            .setStyle(ButtonStyle.Primary),
-
-                        new ButtonBuilder()
-                            .setCustomId(
-                                `vc_verify_${interaction.member.id}`
-                            )
-                            .setLabel('VC Verify')
-                            .setEmoji('🎙️')
-                            .setStyle(ButtonStyle.Success),
-
-                        new ButtonBuilder()
-                            .setCustomId(
-                                `close_verify_${interaction.member.id}`
-                            )
-                            .setLabel('Close')
-                            .setStyle(ButtonStyle.Danger)
-                    );
-
-                await channel.send({
-                    content:
-                        `${interaction.member} <@&${STAFF_ROLE_ID}>`,
-                    embeds: [embed],
-                    components: [row]
+                const channel = await interaction.guild.channels.create({
+                    name: verifyChannelName(interaction.member, type),
+                    type: ChannelType.GuildText,
+                    parent: VERIFY_CATEGORY_ID,
+                    permissionOverwrites: [
+                        { id: interaction.guild.id, deny: ['ViewChannel'] },
+                        {
+                            id: interaction.member.id,
+                            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'AttachFiles']
+                        },
+                        {
+                            id: STAFF_ROLE_ID,
+                            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageMessages', 'AttachFiles']
+                        }
+                    ]
                 });
 
-               return interaction.followUp({
-                    content: `✅ | Your verification ticket has been created: ${channel}`,
-                    ephemeral: true
-                }).catch(() => {});
+                const randomPose =
+    verifyPoses[Math.floor(Math.random() * verifyPoses.length)];
+
+let embed;
+
+if (type === 'id') {
+    embed = new EmbedBuilder()
+        .setTitle('𝗜𝗗 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻')
+        .setDescription(
+            `<a:VerifiedBabyPink:1504450035096621127> **ID Verification**\n\n` +
+            `## How to ID verify:\n` +
+            `• Write today’s date, the server name, and your username on a piece of paper.\n` +
+            `• Send a picture of the paper and your ID with no filters. Blur out any sensitive information except your DOB and picture.\n` +
+            `• Send a selfie holding both the ID and paper.\n` +
+            `• Your required pose is: **${randomPose}**\n\n` +
+            `After staff confirms your verification, you may delete your pictures.`
+        )
+        .setColor('#ffb6d9')
+        .setTimestamp();
+} else {
+    embed = new EmbedBuilder()
+        .setTitle('𝗖𝗿𝗼𝘀𝘀 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻')
+        .setDescription(
+            `<a:crossblueverified:1507266654999154801> **Cross Verification**\n\n` +
+            `• Send a screenshot of your roles from one of our trusted servers.\n` +
+            `• Your required pose is: **${randomPose}**\n` +
+            `• Send a selfie doing the pose.\n\n` +
+            `No edited screenshots or pictures. Once staff confirms your verification, you may delete your pictures.`
+        )
+        .setColor('#8ecbff')
+        .setTimestamp();
+
+                }
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`claim_verify_${interaction.member.id}`)
+                    .setLabel('Claim')
+                    .setStyle(ButtonStyle.Primary),
+
+                new ButtonBuilder()
+                    .setCustomId(`vc_verify_${interaction.member.id}`)
+                    .setLabel('VC Verify')
+                    .setEmoji('🎙️')
+                    .setStyle(ButtonStyle.Success),
+
+                new ButtonBuilder()
+                    .setCustomId(`close_verify_${interaction.member.id}`)
+                    .setLabel('Close')
+                    .setStyle(ButtonStyle.Danger)
+            );
+
+            await channel.send({
+                content: `${interaction.member} <@&${STAFF_ROLE_ID}>`,
+                embeds: [embed],
+                components: [row]
+            });
+
+            return interaction.editReply({
+                content: `✅ | Your verification ticket has been created: ${channel}`
+            }).catch(() => {});
             }
 
             // OPEN SUPPORT/PARTNERSHIP/COUNCIL
@@ -638,90 +623,21 @@ client.on('interactionCreate', async interaction => {
                 interaction.customId === 'open_partnership_ticket' ||
                 interaction.customId === 'open_council_ticket'
             ) {
-
-                const type =
-                    interaction.customId
-                        .replace('open_', '')
-                        .replace('_ticket', '');
-
-                return createTicketChannel(
-                    interaction,
-                    type
-                );
+                const type = interaction.customId.replace('open_', '').replace('_ticket', '');
+                return createTicketChannel(interaction, type);
             }
 
-            const isStaff =
-                interaction.member.roles.cache.has(
-                    STAFF_ROLE_ID
-                );
+            const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
 
             if (!isStaff) {
-                return interaction.followUp({
+                return interaction.editReply({
                     content: 'No permission.'
                 }).catch(() => {});
             }
 
             // CLAIM TICKETS
-            if (
-                interaction.customId.startsWith(
-                    'claim_ticket_'
-                )
-            ) {
-
-               await interaction.followUp({
-                content: '✅ | Claimed.'
-                }).catch(() => {});
-
-                return interaction.channel.send(
-                    `🔒 | ${interaction.user} claimed this ticket.`
-                ).catch(() => {});
-                            }
-
-            // CLOSE TICKETS
-if (interaction.customId.startsWith('close_ticket_')) {
-    const type = interaction.customId.replace('close_ticket_', '');
-    const config = ticketConfigs[type];
-
-    if (!config) {
-        return interaction.followUp({
-            content: 'Ticket config not found.'
-        }).catch(() => {});
-    }
-
-    await interaction.followUp({
-        content: `🔒 | Saving transcript and closing ${config.label.toLowerCase()} ticket...`
-    }).catch(() => {});
-
-    await interaction.channel.send(
-        `🔒 | Saving transcript and closing ${config.label.toLowerCase()} ticket...`
-    ).catch(() => {});
-
-    await sendTicketTranscript(
-        interaction.channel,
-        interaction.user,
-        config.label,
-        config.logChannelId
-    ).catch(err => {
-        console.error(`${config.label} transcript error:`, err);
-    });
-
-    const channelToDelete = interaction.channel;
-
-    setTimeout(async () => {
-        await channelToDelete?.delete().catch(() => {});
-    }, 3000);
-
-    return;
-}
-
-// CLAIM VERIFY
-            if (
-                interaction.customId.startsWith(
-                    'claim_verify_'
-                )
-            ) {
-
-                await interaction.followUp({
+            if (interaction.customId.startsWith('claim_ticket_')) {
+                await interaction.editReply({
                     content: '✅ | Claimed.'
                 }).catch(() => {});
 
@@ -729,15 +645,59 @@ if (interaction.customId.startsWith('close_ticket_')) {
                     `🔒 | ${interaction.user} claimed this ticket.`
                 ).catch(() => {});
             }
-            // VC VERIFY
-            if (
-                interaction.customId.startsWith(
-                    'vc_verify_'
-                )
-            ) {
 
-                await interaction.followUp({
+            // CLOSE TICKETS
+            if (interaction.customId.startsWith('close_ticket_')) {
+                const type = interaction.customId.replace('close_ticket_', '');
+                const config = ticketConfigs[type];
+
+                if (!config) {
+                    return interaction.editReply({
+                        content: 'Ticket config not found.'
+                    }).catch(() => {});
+                }
+
+                await interaction.editReply({
+                    content: `🔒 | Saving transcript and closing ${config.label.toLowerCase()} ticket...`
+                }).catch(() => {});
+
+                await interaction.channel.send(
+                    `🔒 | Saving transcript and closing ${config.label.toLowerCase()} ticket...`
+                ).catch(() => {});
+
+                await sendTicketTranscript(
+                    interaction.channel,
+                    interaction.user,
+                    config.label,
+                    config.logChannelId
+                ).catch(err => {
+                    console.error(`${config.label} transcript error:`, err);
+                });
+
+                const channelToDelete = interaction.channel;
+
+                setTimeout(async () => {
+                    await channelToDelete?.delete().catch(() => {});
+                }, 3000);
+
+                return;
+            }
+
+            // CLAIM VERIFY
+            if (interaction.customId.startsWith('claim_verify_')) {
+                await interaction.editReply({
                     content: '✅ | Claimed.'
+                }).catch(() => {});
+
+                return interaction.channel.send(
+                    `🔒 | ${interaction.user} claimed this ticket.`
+                ).catch(() => {});
+            }
+
+            // VC VERIFY
+            if (interaction.customId.startsWith('vc_verify_')) {
+                await interaction.editReply({
+                    content: '✅ | Marked for VC verification.'
                 }).catch(() => {});
 
                 return interaction.channel.send(
@@ -746,28 +706,32 @@ if (interaction.customId.startsWith('close_ticket_')) {
             }
 
             // CLOSE VERIFY
-            if (
-                interaction.customId.startsWith(
-                    'close_verify_'
-                )
-            ) {
-
-                await interaction.followUp({
-                    content:
-                        '🔒 | Saving transcript and closing verification ticket...'
+            if (interaction.customId.startsWith('close_verify_')) {
+                await interaction.editReply({
+                    content: '🔒 | Saving transcript and closing verification ticket...'
                 }).catch(() => {});
+
+                await sendTicketTranscript(
+                    interaction.channel,
+                    interaction.user,
+                    'Verification',
+                    VERIFY_LOG_CHANNEL_ID
+                ).catch(err => {
+                    console.error('Verification transcript error:', err);
+                });
+
+                const channelToDelete = interaction.channel;
+
+                setTimeout(async () => {
+                    await channelToDelete?.delete().catch(() => {});
+                }, 3000);
 
                 return;
             }
 
             // CLAIM JAIL
-            if (
-                interaction.customId.startsWith(
-                    'claim_jail_'
-                )
-            ) {
-
-                await interaction.followUp({
+            if (interaction.customId.startsWith('claim_jail_')) {
+                await interaction.editReply({
                     content: '✅ | Claimed.'
                 }).catch(() => {});
 
@@ -777,55 +741,34 @@ if (interaction.customId.startsWith('close_ticket_')) {
             }
 
             // CLOSE JAIL
-            if (
-                interaction.customId.startsWith(
-                    'close_jail_'
-                )
-            ) {
-
-                return interaction.followUp({
-                    content:
-                        `🔒 | Use ${PREFIX}close inside this jail channel to close it.`
+            if (interaction.customId.startsWith('close_jail_')) {
+                return interaction.editReply({
+                    content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`
                 }).catch(() => {});
             }
 
             // COPY ROLES
-            if (
-                interaction.customId.startsWith(
-                    'copyroles_'
-                )
-            ) {
+            if (interaction.customId.startsWith('copyroles_')) {
+                const targetId = interaction.customId.split('_')[1];
 
-                const targetId =
-                    interaction.customId.split('_')[1];
-
-                const guildMember =
-                    await interaction.guild.members
-                        .fetch(targetId)
-                        .catch(() => null);
+                const guildMember = await interaction.guild.members
+                    .fetch(targetId)
+                    .catch(() => null);
 
                 if (!guildMember) {
-                    return interaction.followUp({
+                    return interaction.editReply({
                         content: 'User not found.'
                     }).catch(() => {});
                 }
 
-                const ids =
-                    guildMember.roles.cache
-                        .filter(
-                            role =>
-                                role.id !== interaction.guild.id
-                        )
-                        .sort(
-                            (a, b) =>
-                                b.position - a.position
-                        )
-                        .map(role => role.id)
-                        .join(', ');
+                const ids = guildMember.roles.cache
+                    .filter(role => role.id !== interaction.guild.id)
+                    .sort((a, b) => b.position - a.position)
+                    .map(role => role.id)
+                    .join(', ');
 
-                return interaction.followUp({
-                    content:
-                        `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``
+                return interaction.editReply({
+                    content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``
                 }).catch(() => {});
             }
 
@@ -834,44 +777,26 @@ if (interaction.customId.startsWith('close_ticket_')) {
 
         if (!interaction.isChatInputCommand()) return;
 
-        const command =
-            client.commands.get(
-                interaction.commandName
-            );
+        const command = client.commands.get(interaction.commandName);
 
         if (!command) return;
 
         await command.execute(interaction);
 
     } catch (error) {
-
-        console.error(
-            'Interaction error:',
-            error
-        );
+        console.error('Interaction error:', error);
 
         try {
-
-            if (
-                interaction.replied ||
-                interaction.deferred
-            ) {
-
-                await interaction.followUp({
-                    content:
-                        'There was an error handling this interaction.',
-                    ephemeral: true
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({
+                    content: 'There was an error handling this interaction.'
                 }).catch(() => {});
-
             } else {
-
                 await interaction.reply({
-                    content:
-                        'There was an error handling this interaction.',
+                    content: 'There was an error handling this interaction.',
                     ephemeral: true
                 }).catch(() => {});
             }
-
         } catch {}
     }
 });
@@ -1349,9 +1274,15 @@ const automodWhitelist = [
 
 if (automodWhitelist.some(word => content.includes(word))) return;
 
+const blockedWords = require('./blockedWords.json');
+
+const blockedRegexes = blockedWords.map(word =>
+    new RegExp(`\\b${word}\\b`, 'i')
+);
 const matchedWord = blockedWords.find((word, index) =>
     blockedRegexes[index].test(content)
 );
+
 
 if (!matchedWord) return;
 
