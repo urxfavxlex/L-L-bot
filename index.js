@@ -801,35 +801,60 @@ if (message.content.startsWith(`${PREFIX}cv`)) {
         // IGNORE OTHER PREFIX COMMANDS
         if (message.content.startsWith(PREFIX)) return;
 
-        // AUTOMOD
-        const content = message.content.toLowerCase();
+// AUTOMOD
+const content = message.content.toLowerCase();
 
-        const matchedWord = blockedWords.find(word =>
-            content.includes(word.toLowerCase())
-        );
+const automodWhitelist = [
+    'therapist',
+    'therapy',
+    'grape',
+    'grapes',
+    'scrap',
+    'scrape'
+];
 
-        if (!matchedWord) return;
+if (automodWhitelist.some(word => content.includes(word))) return;
 
-        const member = message.member;
+const matchedWord = blockedWords.find(word => {
 
-        if (!member || !jailedRole) return;
-        if (member.roles.cache.has(jailedRoleId)) return;
-        if (activeAutoJails.has(member.id)) return;
+    const cleanWord = word.trim().toLowerCase();
 
-        activeAutoJails.add(member.id);
+    const escaped = cleanWord.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&'
+    );
 
-        await message.delete().catch(() => {});
-        await saveRoles(member, jailedRoleId);
-        await removeRolesAndJail(member, jailedRole);
-        await createOrGetJailChannel(
-            message.guild,
-            member,
-            `Automod: ${matchedWord}`
-        );
+    const regex = new RegExp(
+        `\\b${escaped}\\b`,
+        'i'
+    );
 
-        setTimeout(() => {
-            activeAutoJails.delete(member.id);
-        }, 5000);
+    return regex.test(content);
+});
+
+if (!matchedWord) return;
+
+const member = message.member;
+
+if (!member || !jailedRole) return;
+if (member.roles.cache.has(jailedRoleId)) return;
+if (activeAutoJails.has(member.id)) return;
+
+activeAutoJails.add(member.id);
+
+await message.delete().catch(() => {});
+await saveRoles(member, jailedRoleId);
+await removeRolesAndJail(member, jailedRole);
+
+await createOrGetJailChannel(
+    message.guild,
+    member,
+    `Automod: ${matchedWord}`
+);
+
+setTimeout(() => {
+    activeAutoJails.delete(member.id);
+}, 5000);
 
     } catch (error) {
         console.error('Message handler error:', error);
