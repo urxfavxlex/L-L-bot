@@ -199,13 +199,6 @@ async function sendTicketTranscript(channel, closedBy, type, logChannelId) {
     const logChannel =
         channel.guild.channels.cache.get(logChannelId);
 
-        console.log('TRANSCRIPT DEBUG:', {
-    type,
-    logChannelId,
-    foundChannel: logChannel?.name,
-    foundChannelId: logChannel?.id
-});
-
    if (!logChannel) {
     console.log('TRANSCRIPT FAILED: log channel not found', {
         type,
@@ -256,11 +249,6 @@ async function sendTicketTranscript(channel, closedBy, type, logChannelId) {
     files: [attachment]
 }).then(() => {
 
-    console.log('TRANSCRIPT SENT:', {
-        type,
-        channel: logChannel.name,
-        channelId: logChannel.id
-    });
 
 }).catch(err => {
 
