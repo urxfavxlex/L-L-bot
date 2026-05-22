@@ -54,6 +54,19 @@ const UNVERIFIED_ROLE_ID = '1250655963401289740';
 const VERIFY_CATEGORY_ID = '1370642326422028298';
 const VERIFY_LOG_CHANNEL_ID = '1370630712935583744';
 
+const SUPPORT_CATEGORY_ID = '1371998685583507486';
+const PARTNERSHIP_CATEGORY_ID = '1507292226957344819';
+const COUNCIL_CATEGORY_ID = '1391302172041285692';
+
+const SUPPORT_LOG_CHANNEL_ID = '1507294987165892608';
+const PARTNERSHIP_LOG_CHANNEL_ID = '1507295204275916821';
+const COUNCIL_LOG_CHANNEL_ID = '1391301818692145222';
+
+const PARTNERSHIP_MANAGER_ROLE_ID = '1507292432767782973';
+const ADMIN_ROLE_ID = '1371004354680848385';
+const SERVER_MANAGER_ROLE_ID = '1371000386432925717';
+const COUNCIL_ROLE_ID = '1391303718665850960';
+
 client.once('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
@@ -86,6 +99,222 @@ function jailChannelName(member) {
 
 function verifyChannelName(member, type) {
     return `${type}-verify-${member.user.username.toLowerCase()}`;
+}
+
+function ticketChannelName(member, type) {
+    return `${type}-${member.user.username.toLowerCase()}`;
+}
+
+function hasAnyRole(member, roleIds) {
+    return roleIds.some(roleId => member.roles.cache.has(roleId));
+}
+
+const ticketConfigs = {
+    support: {
+        label: 'Support',
+        emoji: '<:3121staff:1507298065583837274>',
+        categoryId: SUPPORT_CATEGORY_ID,
+        logChannelId: SUPPORT_LOG_CHANNEL_ID,
+        pingRoles: [STAFF_ROLE_ID],
+        allowedCloseRoles: [STAFF_ROLE_ID],
+        color: '#B22959',
+        panelTitle: 'Support Tickets',
+        panelDescription:
+            `Need help with something? Open a support ticket below and a staff member will assist you as soon as possible. Whether it’s questions, concerns, reports, role issues, partnership help, or anything else, we’ve got you.\n\n` +
+            `For minor issues or quick reports, please use /report with Sapphire instead of opening a ticket.\n\n` +
+            `Please be patient after opening a ticket and avoid pinging staff repeatedly. Include as much detail as possible so we can help faster.`,
+        ticketTitle: 'Support Ticket Opened',
+        ticketDescription:
+            `Thank you for opening a support ticket! Please explain your issue in detail below so staff can assist you faster.\n\n` +
+            `Helpful things to include:\n` +
+            `• What happened\n` +
+            `• Usernames/IDs involved\n` +
+            `• Screenshots or proof if applicable\n` +
+            `• What you need help with\n\n` +
+            `Please be patient while waiting for a response and avoid pinging staff repeatedly. A staff member will be with you as soon as possible.`
+    },
+
+    partnership: {
+        label: 'Partnership',
+        emoji: '<:partner_LL:1507299122728927303>',
+        categoryId: PARTNERSHIP_CATEGORY_ID,
+        logChannelId: PARTNERSHIP_LOG_CHANNEL_ID,
+        pingRoles: [
+            ADMIN_ROLE_ID,
+            SERVER_MANAGER_ROLE_ID,
+            COUNCIL_ROLE_ID,
+            PARTNERSHIP_MANAGER_ROLE_ID
+        ],
+        allowedCloseRoles: [
+            ADMIN_ROLE_ID,
+            SERVER_MANAGER_ROLE_ID,
+            COUNCIL_ROLE_ID,
+            PARTNERSHIP_MANAGER_ROLE_ID
+        ],
+        color: '#B22959',
+        panelTitle: 'Partnership Tickets',
+        panelDescription:
+            `Interested in partnering with Leather & Lace? Open a partnership ticket below and our team will review your server as soon as possible.\n\n` +
+            `Please make sure your server follows Discord ToS and is active before applying. Trusted partnerships may receive additional perks depending on activity, reputation, and community safety.\n\n` +
+            `When opening a ticket, please include:\n` +
+            `• Your server invite\n` +
+            `• Member count\n` +
+            `• What type of partnership you’re looking for\n` +
+            `• Your server ad/banner\n` +
+            `• Any important information you’d like us to know\n\n` +
+            `Please be patient while waiting for a response from our team.`,
+        ticketTitle: 'Partnership Ticket Opened',
+        ticketDescription:
+            `Thank you for opening a partnership ticket! Please provide the following information below so our team can review your request faster:\n\n` +
+            `• Server invite link\n` +
+            `• Member count\n` +
+            `• Partnership type requested\n` +
+            `• Your advertisement/banner\n` +
+            `• Brief description of your server/community\n` +
+            `• Any questions or extra information\n\n` +
+            `One of our staff members will review your request as soon as possible. Please avoid pinging staff while waiting.`
+    },
+
+    council: {
+        label: 'Council',
+        emoji: '<a:purplesiren:1507300456299233350>',
+        categoryId: COUNCIL_CATEGORY_ID,
+        logChannelId: COUNCIL_LOG_CHANNEL_ID,
+        pingRoles: [COUNCIL_ROLE_ID],
+        allowedCloseRoles: [COUNCIL_ROLE_ID],
+        color: '#B22959',
+        panelTitle: 'Council Tickets',
+        panelDescription:
+            `Council tickets are reserved for extremely serious situations only. This includes reports involving staff members, major safety concerns, abuse of power, severe harassment, privacy concerns, or situations that cannot safely be handled through normal support tickets.\n\n` +
+            `Do not open council tickets for minor reports, role requests, drama, or basic support questions. For smaller issues, please use /report with Sapphire or open a normal support ticket instead.\n\n` +
+            `All council tickets are handled privately by Council and upper management.`,
+        ticketTitle: 'Council Ticket Opened',
+        ticketDescription:
+            `Thank you for opening a council ticket. Please explain the situation in as much detail as possible below.\n\n` +
+            `Please include:\n` +
+            `• What happened\n` +
+            `• Users/staff involved\n` +
+            `• Screenshots, message links, or proof\n` +
+            `• Dates/times if relevant\n` +
+            `• Any previous actions already taken\n\n` +
+            `These tickets are reviewed carefully due to the severity of the reports involved. Please remain respectful and patient while Council reviews the situation. Avoid pinging staff unless additional urgent information needs to be added.`
+    }
+};
+
+async function createTicketChannel(
+    interaction,
+    type
+) {
+
+    const config = ticketConfigs[type];
+
+    const existingChannel =
+        interaction.guild.channels.cache.find(
+            ch => ch.name === ticketChannelName(
+                interaction.member,
+                type
+            )
+        );
+
+    if (existingChannel) {
+
+       return interaction.followUp({
+    content:
+        `You already have an open ${config.label.toLowerCase()} ticket: ${existingChannel}`,
+    ephemeral: true
+}).catch(() => {});
+    }
+
+    const permissionOverwrites = [
+
+        {
+            id: interaction.guild.id,
+            deny: ['ViewChannel']
+        },
+
+        {
+            id: interaction.member.id,
+            allow: [
+                'ViewChannel',
+                'SendMessages',
+                'ReadMessageHistory',
+                'AttachFiles'
+            ]
+        }
+    ];
+
+    for (const roleId of config.pingRoles) {
+
+        permissionOverwrites.push({
+            id: roleId,
+            allow: [
+                'ViewChannel',
+                'SendMessages',
+                'ReadMessageHistory',
+                'ManageMessages',
+                'AttachFiles'
+            ]
+        });
+    }
+
+    const channel =
+        await interaction.guild.channels.create({
+
+            name: ticketChannelName(
+                interaction.member,
+                type
+            ),
+
+            type: ChannelType.GuildText,
+
+            parent: config.categoryId,
+
+            permissionOverwrites
+        });
+
+    const embed = new EmbedBuilder()
+        .setTitle(config.ticketTitle)
+        .setDescription(config.ticketDescription)
+        .setColor(config.color)
+        .setTimestamp();
+
+    const row =
+        new ActionRowBuilder().addComponents(
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `claim_ticket_${type}`
+                )
+                .setLabel('Claim')
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(
+                    `close_ticket_${type}`
+                )
+                .setLabel('Close')
+                .setStyle(ButtonStyle.Danger)
+        );
+
+    const rolePings =
+        config.pingRoles
+            .map(roleId => `<@&${roleId}>`)
+            .join(' ');
+
+    await channel.send({
+
+        content:
+            `${interaction.member} ${rolePings}`,
+
+        embeds: [embed],
+
+        components: [row]
+    });
+
+    return interaction.followUp({
+        content: `✅ | Your ${config.label.toLowerCase()} ticket has been created: ${channel}`,
+        ephemeral: true
+    }).catch(() => {});
 }
 
 async function saveRoles(member, jailedRoleId) {
@@ -124,8 +353,6 @@ async function removeRolesAndJail(member, jailedRole) {
 async function createOrGetJailChannel(guild, member, reason) {
     const jailedRoleId = process.env.JAILED_ROLE_ID;
     const jailCategoryId = process.env.JAIL_CATEGORY_ID;
-
-    await guild.channels.fetch().catch(() => {});
 
     let jailChannel = guild.channels.cache.find(
         ch => ch.name === jailChannelName(member)
@@ -246,9 +473,6 @@ async function sendTicketTranscript(channel, closedBy, type, logChannelId) {
     await logChannel.send({
     embeds: [embed],
     files: [attachment]
-}).then(() => {
-
-
 }).catch(err => {
 
     console.error(
@@ -279,211 +503,327 @@ async function closeJailChannel(channel, closedBy) {
 
 client.on('interactionCreate', async interaction => {
     try {
-        if (interaction.isButton()) {
-            await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
+        if (interaction.isButton()) {
+
+      // no defer needed
+
+            // OPEN VERIFY TICKETS
             if (
                 interaction.customId === 'open_id_verify' ||
                 interaction.customId === 'open_cross_verify'
             ) {
-                const type = interaction.customId === 'open_id_verify' ? 'id' : 'cross';
 
-                const existingChannel = interaction.guild.channels.cache.find(
-                    ch => ch.name === verifyChannelName(interaction.member, type)
-                );
+                const type =
+                    interaction.customId === 'open_id_verify'
+                        ? 'id'
+                        : 'cross';
+
+                const existingChannel =
+                    interaction.guild.channels.cache.find(
+                        ch => ch.name === verifyChannelName(
+                            interaction.member,
+                            type
+                        )
+                    );
 
                 if (existingChannel) {
-                    return interaction.editReply({
-                        content: `You already have an open verification ticket: ${existingChannel}`
+                    return interaction.followUp({
+                        content: `You already have an open verification ticket: ${existingChannel}`,
+                        ephemeral: true
                     }).catch(() => {});
                 }
 
-                const channel = await interaction.guild.channels.create({
-                    name: verifyChannelName(interaction.member, type),
-                    type: ChannelType.GuildText,
-                    parent: VERIFY_CATEGORY_ID,
-                    permissionOverwrites: [
-                        {
-                            id: interaction.guild.id,
-                            deny: ['ViewChannel']
-                        },
-                        {
-                            id: interaction.member.id,
-                            allow: [
-                                'ViewChannel',
-                                'SendMessages',
-                                'ReadMessageHistory',
-                                'AttachFiles'
-                            ]
-                        },
-                        {
-                            id: STAFF_ROLE_ID,
-                            allow: [
-                                'ViewChannel',
-                                'SendMessages',
-                                'ReadMessageHistory',
-                                'ManageMessages',
-                                'AttachFiles'
-                            ]
-                        }
-                    ]
-                });
+                const channel =
+                    await interaction.guild.channels.create({
 
-    let embed;
+                        name: verifyChannelName(
+                            interaction.member,
+                            type
+                        ),
 
-if (type === 'id') {
+                        type: ChannelType.GuildText,
 
-    embed = new EmbedBuilder()
-        .setTitle('𝗜𝗗 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻')
-        .setDescription(
-            `<a:VerifiedBabyPink:1504450035096621127> **ID Verification**\n\n` +
-            `## How to ID verify:\n` +
-            `• Write today’s date, the server name, and your username on a piece of paper.\n` +
-            `• Send a picture of the paper and your ID with no filters. Blur out any sensitive information except your date of birth and picture.\n` +
-            `• Then send a selfie holding both the ID and paper.\n` +
-            `• After staff confirms your verification, you may delete your pictures.\n\n` +
-            `**Valid identification only.**\n\n` +
-            `## Requirements:\n` +
-            `• All sensitive information must be blurred except your DOB and picture.\n` +
-            `• No filters, emojis, edits, or effects. We need clear pictures.`
-        )
-        .setColor('#ffb6d9')
-        .setTimestamp();
+                        parent: VERIFY_CATEGORY_ID,
 
-} else {
+                        permissionOverwrites: [
+                            {
+                                id: interaction.guild.id,
+                                deny: ['ViewChannel']
+                            },
+                            {
+                                id: interaction.member.id,
+                                allow: [
+                                    'ViewChannel',
+                                    'SendMessages',
+                                    'ReadMessageHistory',
+                                    'AttachFiles'
+                                ]
+                            },
+                            {
+                                id: STAFF_ROLE_ID,
+                                allow: [
+                                    'ViewChannel',
+                                    'SendMessages',
+                                    'ReadMessageHistory',
+                                    'ManageMessages',
+                                    'AttachFiles'
+                                ]
+                            }
+                        ]
+                    });
 
-    embed = new EmbedBuilder()
-        .setTitle('𝗖𝗿𝗼𝘀𝘀 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻')
-        .setDescription(
-            `<a:crossblueverified:1507266654999154801> **Cross Verification**\n\n` +
-            `Send a screenshot of your roles from one of our trusted servers.\n\n` +
-            `One of our staff members will then ask you for a customized pose that you must complete and send in ⁠unknown.\n\n` +
-            `## Please note:\n` +
-            `• You cannot be cross verified here if the server you are coming from also accepted cross verification. We only allow ID verified members from trusted servers to cross verify here.\n` +
-            `• No editing of screenshots or pictures is allowed. If we suspect editing, we will verify your roles directly with the server you joined from.\n` +
-            `• Once staff confirms your verification, you may delete your pictures.\n\n` +
-            `## What do you get?\n` +
-            `Our Cross Verified role, access to all chats, events, daily challenges, roles, and of course our NSFW category.`
-        )
-        .setColor('#8ecbff')
-        .setTimestamp();
-}
+                const embed = new EmbedBuilder()
+                    .setTitle(
+                        type === 'id'
+                            ? '𝗜𝗗 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻'
+                            : '𝗖𝗿𝗼𝘀𝘀 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻'
+                    )
+                    .setDescription(
+                        type === 'id'
+                            ? 'Please send your ID verification information below.'
+                            : 'Please send your cross verification information below.'
+                    )
+                    .setColor(
+                        type === 'id'
+                            ? '#ffb6d9'
+                            : '#8ecbff'
+                    )
+                    .setTimestamp();
 
-                const row = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`claim_verify_${interaction.member.id}`)
-                        .setLabel('Claim')
-                        .setStyle(ButtonStyle.Primary),
+                const row =
+                    new ActionRowBuilder().addComponents(
 
-                    new ButtonBuilder()
-                        .setCustomId(`vc_verify_${interaction.member.id}`)
-                        .setLabel('VC Verify')
-                        .setEmoji('🎙️')
-                        .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId(
+                                `claim_verify_${interaction.member.id}`
+                            )
+                            .setLabel('Claim')
+                            .setStyle(ButtonStyle.Primary),
 
-                    new ButtonBuilder()
-                        .setCustomId(`close_verify_${interaction.member.id}`)
-                        .setLabel('Close')
-                        .setStyle(ButtonStyle.Danger)
-                );
+                        new ButtonBuilder()
+                            .setCustomId(
+                                `vc_verify_${interaction.member.id}`
+                            )
+                            .setLabel('VC Verify')
+                            .setEmoji('🎙️')
+                            .setStyle(ButtonStyle.Success),
+
+                        new ButtonBuilder()
+                            .setCustomId(
+                                `close_verify_${interaction.member.id}`
+                            )
+                            .setLabel('Close')
+                            .setStyle(ButtonStyle.Danger)
+                    );
 
                 await channel.send({
-                    content: `${interaction.member} <@&${STAFF_ROLE_ID}>`,
+                    content:
+                        `${interaction.member} <@&${STAFF_ROLE_ID}>`,
                     embeds: [embed],
                     components: [row]
                 });
 
-                return interaction.editReply({
-                    content: `✅ | Your verification ticket has been created: ${channel}`
+               return interaction.followUp({
+                    content: `✅ | Your verification ticket has been created: ${channel}`,
+                    ephemeral: true
                 }).catch(() => {});
             }
 
-            const isStaff = interaction.member.roles.cache.has(STAFF_ROLE_ID);
+            // OPEN SUPPORT/PARTNERSHIP/COUNCIL
+            if (
+                interaction.customId === 'open_support_ticket' ||
+                interaction.customId === 'open_partnership_ticket' ||
+                interaction.customId === 'open_council_ticket'
+            ) {
+
+                const type =
+                    interaction.customId
+                        .replace('open_', '')
+                        .replace('_ticket', '');
+
+                return createTicketChannel(
+                    interaction,
+                    type
+                );
+            }
+
+            const isStaff =
+                interaction.member.roles.cache.has(
+                    STAFF_ROLE_ID
+                );
 
             if (!isStaff) {
-                return interaction.editReply({
+                return interaction.followUp({
                     content: 'No permission.'
                 }).catch(() => {});
             }
 
-            if (interaction.customId.startsWith('claim_verify_')) {
-                await interaction.deleteReply().catch(() => {});
+            // CLAIM TICKETS
+            if (
+                interaction.customId.startsWith(
+                    'claim_ticket_'
+                )
+            ) {
+
+               await interaction.followUp({
+                content: '✅ | Claimed.'
+                }).catch(() => {});
+
                 return interaction.channel.send(
-                    `🔒 | ${interaction.user} claimed this verification ticket.`
+                    `🔒 | ${interaction.user} claimed this ticket.`
+                ).catch(() => {});
+                            }
+
+            // CLOSE TICKETS
+if (interaction.customId.startsWith('close_ticket_')) {
+    const type = interaction.customId.replace('close_ticket_', '');
+    const config = ticketConfigs[type];
+
+    if (!config) {
+        return interaction.followUp({
+            content: 'Ticket config not found.'
+        }).catch(() => {});
+    }
+
+    await interaction.followUp({
+        content: `🔒 | Saving transcript and closing ${config.label.toLowerCase()} ticket...`
+    }).catch(() => {});
+
+    await interaction.channel.send(
+        `🔒 | Saving transcript and closing ${config.label.toLowerCase()} ticket...`
+    ).catch(() => {});
+
+    await sendTicketTranscript(
+        interaction.channel,
+        interaction.user,
+        config.label,
+        config.logChannelId
+    ).catch(err => {
+        console.error(`${config.label} transcript error:`, err);
+    });
+
+    const channelToDelete = interaction.channel;
+
+    setTimeout(async () => {
+        await channelToDelete?.delete().catch(() => {});
+    }, 3000);
+
+    return;
+}
+
+// CLAIM VERIFY
+            if (
+                interaction.customId.startsWith(
+                    'claim_verify_'
+                )
+            ) {
+
+                await interaction.followUp({
+                    content: '✅ | Claimed.'
+                }).catch(() => {});
+
+                return interaction.channel.send(
+                    `🔒 | ${interaction.user} claimed this ticket.`
                 ).catch(() => {});
             }
+            // VC VERIFY
+            if (
+                interaction.customId.startsWith(
+                    'vc_verify_'
+                )
+            ) {
 
-            if (interaction.customId.startsWith('vc_verify_')) {
-                await interaction.deleteReply().catch(() => {});
+                await interaction.followUp({
+                    content: '✅ | Claimed.'
+                }).catch(() => {});
+
                 return interaction.channel.send(
                     `🎙️ | ${interaction.user} marked this ticket for VC verification.`
                 ).catch(() => {});
             }
 
-            if (interaction.customId.startsWith('close_verify_')) {
-                await interaction.editReply({
-                    content: '🔒 | Saving transcript and closing verification ticket...'
+            // CLOSE VERIFY
+            if (
+                interaction.customId.startsWith(
+                    'close_verify_'
+                )
+            ) {
+
+                await interaction.followUp({
+                    content:
+                        '🔒 | Saving transcript and closing verification ticket...'
                 }).catch(() => {});
-
-                await interaction.channel.send(
-                    '🔒 | Saving transcript and closing verification ticket...'
-                ).catch(() => {});
-
-                await sendTicketTranscript(
-                interaction.channel,
-                interaction.user,
-                'Verification',
-                VERIFY_LOG_CHANNEL_ID
-            ).catch(err => {
-                console.error( 
-                    'Verification transcript error:',
-                    err
-     );
-});
-
-                const channelToDelete = interaction.channel;
-
-                setTimeout(async () => {
-                await channelToDelete?.delete().catch(() => {});
-                }, 3000);
 
                 return;
             }
 
-            if (interaction.customId.startsWith('claim_jail_')) {
-                await interaction.deleteReply().catch(() => {});
+            // CLAIM JAIL
+            if (
+                interaction.customId.startsWith(
+                    'claim_jail_'
+                )
+            ) {
+
+                await interaction.followUp({
+                    content: '✅ | Claimed.'
+                }).catch(() => {});
+
                 return interaction.channel.send(
                     `🔒 | ${interaction.user} claimed this jail.`
                 ).catch(() => {});
             }
 
-            if (interaction.customId.startsWith('close_jail_')) {
-                return interaction.editReply({
-                    content: `🔒 | Use ${PREFIX}close inside this jail channel to close it.`
+            // CLOSE JAIL
+            if (
+                interaction.customId.startsWith(
+                    'close_jail_'
+                )
+            ) {
+
+                return interaction.followUp({
+                    content:
+                        `🔒 | Use ${PREFIX}close inside this jail channel to close it.`
                 }).catch(() => {});
             }
 
-            if (interaction.customId.startsWith('copyroles_')) {
-                const targetId = interaction.customId.split('_')[1];
+            // COPY ROLES
+            if (
+                interaction.customId.startsWith(
+                    'copyroles_'
+                )
+            ) {
 
-                const guildMember = await interaction.guild.members
-                    .fetch(targetId)
-                    .catch(() => null);
+                const targetId =
+                    interaction.customId.split('_')[1];
+
+                const guildMember =
+                    await interaction.guild.members
+                        .fetch(targetId)
+                        .catch(() => null);
 
                 if (!guildMember) {
-                    return interaction.editReply({
+                    return interaction.followUp({
                         content: 'User not found.'
                     }).catch(() => {});
                 }
 
-                const ids = guildMember.roles.cache
-                    .filter(role => role.id !== interaction.guild.id)
-                    .sort((a, b) => b.position - a.position)
-                    .map(role => role.id)
-                    .join(', ');
+                const ids =
+                    guildMember.roles.cache
+                        .filter(
+                            role =>
+                                role.id !== interaction.guild.id
+                        )
+                        .sort(
+                            (a, b) =>
+                                b.position - a.position
+                        )
+                        .map(role => role.id)
+                        .join(', ');
 
-                return interaction.editReply({
-                    content: `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``
+                return interaction.followUp({
+                    content:
+                        `📋 Role IDs:\n\`\`\`\n${ids || 'No roles'}\n\`\`\``
                 }).catch(() => {});
             }
 
@@ -492,26 +832,44 @@ if (type === 'id') {
 
         if (!interaction.isChatInputCommand()) return;
 
-        const command = client.commands.get(interaction.commandName);
+        const command =
+            client.commands.get(
+                interaction.commandName
+            );
+
         if (!command) return;
 
         await command.execute(interaction);
 
     } catch (error) {
-        console.error('Interaction error:', error);
+
+        console.error(
+            'Interaction error:',
+            error
+        );
 
         try {
-            if (interaction.replied || interaction.deferred) {
+
+            if (
+                interaction.replied ||
+                interaction.deferred
+            ) {
+
                 await interaction.followUp({
-                    content: 'There was an error handling this interaction.',
+                    content:
+                        'There was an error handling this interaction.',
                     ephemeral: true
                 }).catch(() => {});
+
             } else {
+
                 await interaction.reply({
-                    content: 'There was an error handling this interaction.',
+                    content:
+                        'There was an error handling this interaction.',
                     ephemeral: true
                 }).catch(() => {});
             }
+
         } catch {}
     }
 });
@@ -702,7 +1060,7 @@ if (message.content.startsWith(`${PREFIX}verify`)) {
         components: [row]
     });
 }
-        
+   
 // ID VERIFY STAFF COMMAND
 if (message.content.startsWith(`${PREFIX}idv`)) {
 
@@ -733,13 +1091,6 @@ if (message.content.startsWith(`${PREFIX}idv`)) {
     if (gender === 'f') genderRole = VERIFIED_FEMALE_ROLE_ID;
     if (gender === 'm') genderRole = VERIFIED_MALE_ROLE_ID;
     if (gender === 'o') genderRole = VERIFIED_OTHER_ROLE_ID;
-
-    console.log('IDV command ran');
-    console.log('Target:', member?.user?.tag);
-    console.log('Gender arg:', args[2]);
-    console.log('ID role:', ID_VERIFIED_ROLE_ID);
-    console.log('Gender role:', genderRole);
-    console.log('Bot highest role:', message.guild.members.me.roles.highest.name);
 
     if (!genderRole) {
     return message.reply('Use f, m, or o.');
@@ -940,6 +1291,45 @@ if (message.content.startsWith(`${PREFIX}cv`)) {
             }).catch(() => {});
         }
 
+        // TICKET PANELS
+if (
+    message.content.startsWith(`${PREFIX}supportpanel`) ||
+    message.content.startsWith(`${PREFIX}partnershippanel`) ||
+    message.content.startsWith(`${PREFIX}councilpanel`)
+) {
+
+    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+        return message.reply('No permission.');
+    }
+
+    const type = message.content
+        .replace(PREFIX, '')
+        .replace('panel', '')
+        .trim();
+
+    const config = ticketConfigs[type];
+
+    if (!config) return;
+
+    const embed = new EmbedBuilder()
+        .setTitle(`${config.emoji} ${config.panelTitle}`)
+        .setDescription(config.panelDescription)
+        .setColor(config.color)
+        .setTimestamp();
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(`open_${type}_ticket`)
+            .setLabel(`${config.label} Ticket`)
+            .setStyle(ButtonStyle.Primary)
+    );
+
+    return message.channel.send({
+        embeds: [embed],
+        components: [row]
+    });
+}
+
 // IGNORE OTHER PREFIX COMMANDS
         if (message.content.startsWith(PREFIX)) return;
 
@@ -957,22 +1347,9 @@ const automodWhitelist = [
 
 if (automodWhitelist.some(word => content.includes(word))) return;
 
-const matchedWord = blockedWords.find(word => {
-
-    const cleanWord = word.trim().toLowerCase();
-
-    const escaped = cleanWord.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        '\\$&'
-    );
-
-    const regex = new RegExp(
-        `\\b${escaped}\\b`,
-        'i'
-    );
-
-    return regex.test(content);
-});
+const matchedWord = blockedWords.find((word, index) =>
+    blockedRegexes[index].test(content)
+);
 
 if (!matchedWord) return;
 
