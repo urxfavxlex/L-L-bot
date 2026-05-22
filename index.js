@@ -221,30 +221,27 @@ async function sendTicketTranscript(channel, closedBy, type, logChannelId) {
         );
 
     const embed = new EmbedBuilder()
-        .setTitle(`${type} Transcript`)
-        .setColor(
-            type === 'Jail'
-                ? '#ff4da6'
-                : '#B22959'
-        )
-        .addFields(
-            {
-                name: 'Channel',
-                value: `${channel.name}`,
-                inline: false
-            },
-            {
-                name: 'Closed By',
-                value: `${closedBy}`,
-                inline: false
-            },
-            {
-                name: 'Closed At',
-                value: `<t:${Math.floor(Date.now() / 1000)}:F>`,
-                inline: false
-            }
-        )
-        .setTimestamp();
+    .setTitle('Ticket Closed')
+    .setColor(
+        type === 'Jail'
+            ? '#249fe6'
+            : '#B22959'
+    )
+    .setDescription(
+        `**ID:** \`${channel.id}\`\n` +
+        `**Name:** ${channel.name}\n\n` +
+
+        `__**Closed By**__\n` +
+        `ID: \`${closedBy.id}\`\n` +
+        `Mention: ${closedBy}\n` +
+        `Display Name: ${closedBy.tag || closedBy.username}\n\n` +
+
+        `__**Close Reason**__\n` +
+        `No reason provided.\n\n` +
+
+        `**Closed On:** <t:${Math.floor(Date.now() / 1000)}:F>`
+    )
+    .setTimestamp();
 
     await logChannel.send({
     embeds: [embed],
@@ -433,13 +430,16 @@ if (type === 'id') {
                 ).catch(() => {});
 
                 await sendTicketTranscript(
-                    interaction.channel,
-                    interaction.user,
-                    'Verification',
-                    VERIFY_LOG_CHANNEL_ID
-                ).catch(err => {
-                    console.error('Verification transcript error:', err);
-                });
+                interaction.channel,
+                interaction.user,
+                'Verification',
+                VERIFY_LOG_CHANNEL_ID
+            ).catch(err => {
+                console.error( 
+                    'Verification transcript error:',
+                    err
+     );
+});
 
                 const channelToDelete = interaction.channel;
 
