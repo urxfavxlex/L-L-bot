@@ -342,14 +342,73 @@ client.on('interactionCreate', async interaction => {
                     ]
                 });
 
-                const embed = new EmbedBuilder()
-                    .setTitle(`${type.toUpperCase()} Verification`)
-                    .setDescription(
-                        `${interaction.member}, a staff member will be with you shortly.\n\n` +
-                        `Please do not ping staff repeatedly.`
-                    )
-                    .setColor('#B22959')
-                    .setTimestamp();
+                let embed;
+
+if (type === 'id') {
+
+    embed = new EmbedBuilder()
+        .setTitle('<a:VerifiedBabyPink:1504450035096621127> 𝗜𝗗 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻')
+        .setDescription(
+            `## How to ID verify:\n` +
+            `• Write today’s date, the server name, and your username on a piece of paper.\n` +
+            `• Send a picture of the paper and your ID with no filters. Blur out any sensitive information except your date of birth and picture.\n` +
+            `• Then send a selfie holding both the ID and paper.\n` +
+            `• After staff confirms your verification, you may delete your pictures.\n\n` +
+
+            `**Valid identification only.**\n\n` +
+
+            `## Requirements:\n` +
+            `• All sensitive information must be blurred except your DOB and picture.\n` +
+            `• No filters, emojis, edits, or effects. We need clear pictures.`
+        )
+        .setColor('#ffb6d9')
+        .setTimestamp();
+
+} else {
+
+    let embed;
+
+if (type === 'id') {
+
+    embed = new EmbedBuilder()
+        .setTitle('<a:VerifiedBabyPink:1504450035096621127> 𝗜𝗗 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻')
+        .setDescription(
+            `## How to ID verify:\n` +
+            `• Write today’s date, the server name, and your username on a piece of paper.\n` +
+            `• Send a picture of the paper and your ID with no filters. Blur out any sensitive information except your date of birth and picture.\n` +
+            `• Then send a selfie holding both the ID and paper.\n` +
+            `• After staff confirms your verification, you may delete your pictures.\n\n` +
+
+            `**Valid identification only.**\n\n` +
+
+            `## Requirements:\n` +
+            `• All sensitive information must be blurred except your DOB and picture.\n` +
+            `• No filters, emojis, edits, or effects. We need clear pictures.`
+        )
+        .setColor('#ffb6d9')
+        .setTimestamp();
+
+} else {
+
+    embed = new EmbedBuilder()
+        .setTitle('<a:crossblueverified:1507266654999154801> 𝗖𝗿𝗼𝘀𝘀 𝗩𝗲𝗿𝗶𝗳𝗶𝗰𝗮𝘁𝗶𝗼𝗻')
+        .setDescription(
+            `Send a screenshot of your roles from one of our trusted servers.\n\n` +
+
+            `One of our staff members will then ask you for a customized pose that you must complete and send in ⁠unknown.\n\n` +
+
+            `## Please note:\n` +
+            `• You cannot be cross verified here if the server you are coming from also accepted cross verification. We only allow ID verified members from trusted servers to cross verify here.\n` +
+            `• No editing of screenshots or pictures is allowed. If we suspect editing, we will verify your roles directly with the server you joined from.\n` +
+            `• Once staff confirms your verification, you may delete your pictures.\n\n` +
+
+            `## What do you get?\n` +
+            `Our Cross Verified role, access to all chats, events, daily challenges, roles, and of course our NSFW category.`
+        )
+        .setColor('#8ecbff')
+        .setTimestamp();
+}
+}
 
                 const row = new ActionRowBuilder().addComponents(
                     new ButtonBuilder()
