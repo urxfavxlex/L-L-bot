@@ -39,6 +39,8 @@ const activeUnjails = new Set();
 const activeVerifications = new Set();
 const STAFF_ROLE_ID = '1371005644638912542';
 
+const TRUSTED_SERVERS_CHANNEL_ID = '1391263294312157265';
+
 const VERIFIED_FEMALE_ROLE_ID = '1371005088084000778';
 const VERIFIED_MALE_ROLE_ID = '1371005022707515463';
 
@@ -670,9 +672,10 @@ if (message.content.startsWith(`${PREFIX}verify`)) {
         .setTitle('୨୧・Verification System・୨୧')
         .setDescription(
             'Welcome to **Leather & Lace** verification.\n\n' +
-            '💕 **Cross Verification**\n' +
-            '💙 **ID Verification**\n\n' +
-            'Please check trusted servers before choosing cross verification.\n\n' +
+            '<a:crossblueverified:1507266654999154801> **Cross Verification**\n' +
+            '<a:VerifiedBabyPink:1504450035096621127> **ID Verification**\n\n' +
+            'Please check trusted servers before choosing cross verification.\n' +
+            '<#1391263294312157265>\n\n' +
             'Click a button below to open a verification ticket.\n\n' +
             'Staff will assist you as soon as possible.'
         )
@@ -747,9 +750,33 @@ if (message.content.startsWith(`${PREFIX}idv`)) {
     await member.roles.add(genderRole);
     await member.roles.remove(UNVERIFIED_ROLE_ID);
 
-    return message.channel.send(
-        `✅ | ${member} has been ID verified.`
-    );
+    return message.channel.send({
+    embeds: [
+        new EmbedBuilder()
+            .setColor('#B22959')
+            .setDescription(
+                `I’m gonna leave this open for about 5 minutes so you can grab all your roles before I close everything out.\n\n` +
+
+                `**Main Roles:** <#1250673806108917770>\n` +
+                `**NSFW Roles:** <#1370301378601156618>\n` +
+                `**Color Roles:** <#1503561264855777391>\n` +
+                `**Server Map:** <#1504425608170704966>\n` +
+                `**Rules:** <#1348580499962073098>\n` +
+                `**NSFW Rules & Access:** <#1504446626176176129>\n\n` +
+
+                `🚨 **MAKE SURE YOU GRAB YOUR DM ROLES. THEY ARE REQUIRED.** 🚨\n\n` +
+
+                `Do you have any questions before I close everything out?\n\n` +
+
+                `Welcome to Leather & Lace!!! Thank you for verifying\n` +
+                `<a:ggbikinibottom:1254825377075953694> ` +
+                `<a:happy:1372396099024851025> ` +
+                `<a:ggbikinibottom:1254825331211374624>`
+            )
+            .setTimestamp()
+    ]
+});
+
 } catch (err) {
     console.error('IDV role error:', err);
     return message.reply(`Role error: ${err.message}`);
@@ -812,9 +839,32 @@ if (message.content.startsWith(`${PREFIX}cv`)) {
         );
     }
 
-    return message.channel.send(
-        `✅ | ${member} has been cross verified.`
-    );
+    return message.channel.send({
+    embeds: [
+        new EmbedBuilder()
+            .setColor('#B22959')
+            .setDescription(
+                 `I’m gonna leave this open for about 5 minutes so you can grab all your roles before I close everything out.\n\n` +
+
+                `**Main Roles:** <#1250673806108917770>\n` +
+                `**NSFW Roles:** <#1370301378601156618>\n` +
+                `**Color Roles:** <#1503561264855777391>\n` +
+                `**Server Map:** <#1504425608170704966>\n` +
+                `**Rules:** <#1348580499962073098>\n` +
+                `**NSFW Rules & Access:** <#1504446626176176129>\n\n` +
+
+                `🚨 **MAKE SURE YOU GRAB YOUR DM ROLES. THEY ARE REQUIRED.** 🚨\n\n` +
+
+                `Do you have any questions before I close everything out?\n\n` +
+
+                `Welcome to Leather & Lace!!! Thank you for verifying\n` +
+                `<a:ggbikinibottom:1254825377075953694> ` +
+                `<a:happy:1372396099024851025> ` +
+                `<a:ggbikinibottom:1254825331211374624>`
+            )
+            .setTimestamp()
+    ]
+});
 }
 
 // USERINFO
