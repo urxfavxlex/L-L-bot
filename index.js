@@ -506,6 +506,8 @@ client.on('interactionCreate', async interaction => {
 
         if (interaction.isButton()) {
 
+            await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
       // no defer needed
 
             // OPEN VERIFY TICKETS
