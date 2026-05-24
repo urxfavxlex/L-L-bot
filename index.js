@@ -1210,7 +1210,8 @@ if (message.content.startsWith(`${PREFIX}unv`)) {
             .setTitle('🔓 User Unverified')
             .setDescription(
                 `${member} has been unverified.\n\n` +
-                `Skill issue honestly.`
+                `Skill issue honestly.\n\n` +
+                'Womp Womp. Get fucked loser.'
             )
             .setColor('#ff4d6d')
             .setTimestamp()
