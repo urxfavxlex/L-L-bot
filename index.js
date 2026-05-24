@@ -1143,6 +1143,70 @@ if (message.content.startsWith(`${PREFIX}cv`)) {
             .setTimestamp()
     ]
 });
+
+        // UNVERIFY
+if (message.content.startsWith(`${PREFIX}unv`)) {
+
+    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
+        return message.reply('No permission.');
+    }
+
+    const member = message.mentions.members.first();
+
+    if (!member) {
+        return message.reply('Usage: ,unv @user');
+    }
+
+    await member.roles.remove([
+        ID_VERIFIED_ROLE_ID,
+        CROSS_VERIFIED_ROLE_ID,
+        VERIFIED_FEMALE_ROLE_ID,
+        VERIFIED_MALE_ROLE_ID,
+        VERIFIED_OTHER_ROLE_ID
+    ]).catch(() => {});
+
+    await member.roles.add(UNVERIFIED_ROLE_ID).catch(() => {});
+
+    // LOG
+    await client.channels.cache
+        .get(VERIFY_LOG_CHANNEL_ID)
+        ?.send({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle('🔓 User Unverified')
+                    .setColor('#ff4d6d')
+                    .addFields(
+                        {
+                            name: 'User',
+                            value: `${member.user.tag} (${member.id})`
+                        },
+                        {
+                            name: 'Staff',
+                            value: `${message.author.tag}`
+                        }
+                    )
+                    .setTimestamp()
+            ]
+        }).catch(() => {});
+
+    // DM
+    await member.send({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle('🔓 You Have Been Unverified')
+                .setDescription(
+                    `You have been unverified in **${message.guild.name}**.\n\n` +
+                    `Get fucked loser.`
+                )
+                .setColor('#ff4d6d')
+                .setTimestamp()
+        ]
+    }).catch(() => {});
+
+    return message.channel.send(
+        `🔓 | ${member} has been unverified.`
+    ).catch(() => {});
+}
 }
 
 // USERINFO
