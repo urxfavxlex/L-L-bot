@@ -1141,11 +1141,14 @@ if (message.content.startsWith(`${PREFIX}cv`)) {
                 `<a:ggbikinibottom:1254825331211374624>`
             )
             .setTimestamp()
-    ]
-});
-
-        // UNVERIFY
+        ]
+    });
+}
+console.log('MESSAGE SEEN:', message.content);
+// UNVERIFY
 if (message.content.startsWith(`${PREFIX}unv`)) {
+
+    console.log('UNV COMMAND HIT');
 
     if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
         return message.reply('No permission.');
@@ -1167,7 +1170,6 @@ if (message.content.startsWith(`${PREFIX}unv`)) {
 
     await member.roles.add(UNVERIFIED_ROLE_ID).catch(() => {});
 
-    // LOG
     await client.channels.cache
         .get(VERIFY_LOG_CHANNEL_ID)
         ?.send({
@@ -1189,7 +1191,6 @@ if (message.content.startsWith(`${PREFIX}unv`)) {
             ]
         }).catch(() => {});
 
-    // DM
     await member.send({
         embeds: [
             new EmbedBuilder()
@@ -1203,10 +1204,18 @@ if (message.content.startsWith(`${PREFIX}unv`)) {
         ]
     }).catch(() => {});
 
-    return message.channel.send(
-        `🔓 | ${member} has been unverified.`
-    ).catch(() => {});
-}
+    return message.channel.send({
+    embeds: [
+        new EmbedBuilder()
+            .setTitle('🔓 User Unverified')
+            .setDescription(
+                `${member} has been unverified.\n\n` +
+                `Skill issue honestly.`
+            )
+            .setColor('#ff4d6d')
+            .setTimestamp()
+    ]
+}).catch(() => {});
 }
 
 // USERINFO
