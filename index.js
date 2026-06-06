@@ -1422,9 +1422,6 @@ activeAutoJails.add(member.id);
 await message.delete().catch(() => {});
 console.log("AUTOMOD MATCHED BUT JAIL CREATE DISABLED:", matchedWord);
 return;
-    member,
-    `Automod: ${matchedWord}`
-);
 
 setTimeout(() => {
     activeAutoJails.delete(member.id);
