@@ -1420,11 +1420,8 @@ if (activeAutoJails.has(member.id)) return;
 activeAutoJails.add(member.id);
 
 await message.delete().catch(() => {});
-await saveRoles(member, jailedRoleId);
-await removeRolesAndJail(member, jailedRole);
-
-await createOrGetJailChannel(
-    message.guild,
+console.log("AUTOMOD MATCHED BUT JAIL CREATE DISABLED:", matchedWord);
+return;
     member,
     `Automod: ${matchedWord}`
 );
