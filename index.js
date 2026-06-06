@@ -36,6 +36,7 @@ const activeJails = new Set();
 const activeAutoJails = new Set();
 const activeUnjails = new Set();
 const activeClosingJails = new Set();
+const activeJailCreates = new Set();
 
 const activeVerifications = new Set();
 const STAFF_ROLE_ID = '1371005644638912542';
@@ -366,33 +367,41 @@ async function removeRolesAndJail(member, jailedRole) {
 }
 
 async function createOrGetJailChannel(guild, member, reason) {
-    console.log("CREATING JAIL CHANNEL FOR:", member.user.tag);
+    const lockKey = `${guild.id}-${member.id}`;
+
+    if (activeJailCreates.has(lockKey)) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        const existing = guild.channels.cache.find(
+            ch => ch.name === jailChannelName(member)
+        );
+
+        if (existing) return existing;
+    }
+
+    activeJailCreates.add(lockKey);
 
     const jailedRoleId = process.env.JAILED_ROLE_ID;
     const jailCategoryId = process.env.JAIL_CATEGORY_ID;
+
+    await guild.channels.fetch().catch(() => {});
 
     const existing = guild.channels.cache.find(
         ch => ch.name === jailChannelName(member)
     );
 
     if (existing) {
-        console.log("JAIL ALREADY EXISTS");
+        activeJailCreates.delete(lockKey);
         return existing;
     }
 
-    jailChannel = await guild.channels.create({
+    const jailChannel = await guild.channels.create({
         name: jailChannelName(member),
         type: ChannelType.GuildText,
         parent: jailCategoryId,
         permissionOverwrites: [
-            {
-                id: guild.id,
-                deny: ['ViewChannel']
-            },
-            {
-                id: jailedRoleId,
-                deny: ['ViewChannel']
-            },
+            { id: guild.id, deny: ['ViewChannel'] },
+            { id: jailedRoleId, deny: ['ViewChannel'] },
             {
                 id: member.id,
                 allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
@@ -438,6 +447,7 @@ async function createOrGetJailChannel(guild, member, reason) {
         components: [jailButtons]
     });
 
+    activeJailCreates.delete(lockKey);
     return jailChannel;
 }
 
@@ -978,7 +988,7 @@ if (jailArgs[0] === `${PREFIX}jail`) {
 
             setTimeout(() => {
                 activeJails.delete(jailKey);
-            }, 5000);
+            }, 30000);
 
             return;
         }
@@ -1401,7 +1411,10 @@ if (!matchedWord) return;
 const member = message.member;
 
 if (!member || !jailedRole) return;
+const jailKey = `${message.guild.id}-${member.id}`;
+
 if (member.roles.cache.has(jailedRoleId)) return;
+if (activeJails.has(jailKey)) return;
 if (activeAutoJails.has(member.id)) return;
 
 activeAutoJails.add(member.id);
