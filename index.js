@@ -35,6 +35,7 @@ const PREFIX = ',';
 const activeJails = new Set();
 const activeAutoJails = new Set();
 const activeUnjails = new Set();
+const activeClosingJails = new Set();
 
 const activeVerifications = new Set();
 const STAFF_ROLE_ID = '1371005644638912542';
@@ -449,18 +450,28 @@ async function sendTicketTranscript(channel, closedBy, type, logChannelId) {
     });
     return;
 }
-    const attachment =
-        await discordTranscripts.createTranscript(
-            channel,
-            {
-                limit: -1,
-                returnType: 'attachment',
-                filename: `${channel.name}.html`,
-                saveImages: true,
-                poweredBy: false
-            }
-        );
+console.log("FETCHING TRANSCRIPT FOR:", channel.id, channel.name);
 
+    const messages = await channel.messages.fetch({
+    limit: 100
+}).catch(err => {
+    console.error('TRANSCRIPT FETCH ERROR:', err);
+    return null;
+});
+
+if (!messages) return;
+
+const attachment =
+    await discordTranscripts.generateFromMessages(
+        messages,
+        channel,
+        {
+            returnType: 'attachment',
+            filename: `${channel.name}.html`,
+            saveImages: true,
+            poweredBy: false
+        }
+    );
     const embed = new EmbedBuilder()
     .setTitle('Ticket Closed')
     .setColor(
@@ -499,18 +510,40 @@ async function sendTicketTranscript(channel, closedBy, type, logChannelId) {
 
 async function closeJailChannel(channel, closedBy) {
 
-    await sendTicketTranscript(
+    console.log("CLOSING JAIL:", channel.id, channel.name);
+
+
+    console.log("CLOSING JAIL:", channel.id, channel.name);
+
+
+    if (activeClosingJails.has(channel.id)) return;
+
+    activeClosingJails.add(channel.id);
+
+    const transcriptOk = await sendTicketTranscript(
         channel,
         closedBy,
         'Jail',
         process.env.MOD_LOG_CHANNEL_ID
-    ).catch(err => {
-        console.error(
-            'Jail transcript error:',
-            err
-        );    });
+    ).then(() => true).catch(err => {
+        console.error('Jail transcript error:', err);
+        return false;
+    });
 
-    await channel.delete().catch(() => {});
+    if (!transcriptOk) {
+        activeClosingJails.delete(channel.id);
+
+        await channel.send(
+            '⚠️ | Transcript failed, so I am not deleting this jail channel.'
+        ).catch(() => {});
+
+        return;
+    }
+
+    setTimeout(async () => {
+        await channel.delete().catch(() => {});
+        activeClosingJails.delete(channel.id);
+    }, 10000);
 }
 
 // ─── Interaction Handler ───────────────────────────────────────────────────────
