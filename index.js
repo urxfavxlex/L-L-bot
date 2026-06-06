@@ -366,15 +366,18 @@ async function removeRolesAndJail(member, jailedRole) {
 }
 
 async function createOrGetJailChannel(guild, member, reason) {
+    console.log("CREATING JAIL CHANNEL FOR:", member.user.tag);
+
     const jailedRoleId = process.env.JAILED_ROLE_ID;
     const jailCategoryId = process.env.JAIL_CATEGORY_ID;
 
-    let jailChannel = guild.channels.cache.find(
+    const existing = guild.channels.cache.find(
         ch => ch.name === jailChannelName(member)
     );
 
-    if (jailChannel) {
-        return jailChannel;
+    if (existing) {
+        console.log("JAIL ALREADY EXISTS");
+        return existing;
     }
 
     jailChannel = await guild.channels.create({
@@ -931,6 +934,8 @@ if (message.content.startsWith(`${PREFIX}close`)) {
 
  // JAIL
         if (message.content.startsWith(`${PREFIX}jail`)) {
+            console.log("JAIL COMMAND FIRED");
+
             if (!message.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
                 return message.reply('No permission.');
             }
