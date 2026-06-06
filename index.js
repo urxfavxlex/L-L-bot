@@ -1429,6 +1429,32 @@ await createOrGetJailChannel(
     `Automod: ${matchedWord}`
 );
 
+await client.channels.cache
+    .get(process.env.MOD_LOG_CHANNEL_ID)
+    ?.send({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle("🚨 Autojail Triggered")
+                .setColor("#ff4da6")
+                .addFields(
+                    {
+                        name: "User",
+                        value: `${member} (${member.id})`
+                    },
+                    {
+                        name: "Matched Word",
+                        value: `\`${matchedWord}\``
+                    },
+                    {
+                        name: "Channel",
+                        value: `${message.channel}`
+                    }
+                )
+                .setTimestamp()
+        ]
+    }).catch(() => {});
+
+
 setTimeout(() => {
     activeAutoJails.delete(member.id);
 }, 5000);
