@@ -516,9 +516,6 @@ async function closeJailChannel(channel, closedBy) {
     console.log("CLOSING JAIL:", channel.id, channel.name);
 
 
-    console.log("CLOSING JAIL:", channel.id, channel.name);
-
-
     if (activeClosingJails.has(channel.id)) return;
 
     activeClosingJails.add(channel.id);
@@ -880,7 +877,9 @@ if (message.content.startsWith(`${PREFIX}close`)) {
 }
 
 // UNJAIL
-        if (message.content.startsWith(`${PREFIX}unjail`)) {
+       const unjailArgs = message.content.trim().split(/\s+/);
+
+if (unjailArgs[0] === `${PREFIX}unjail`) {
             if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
                 return message.reply('You do not have permission to unjail members.');
             }
@@ -933,7 +932,9 @@ if (message.content.startsWith(`${PREFIX}close`)) {
         }
 
  // JAIL
-        if (message.content.startsWith(`${PREFIX}jail`)) {
+        const jailArgs = message.content.trim().split(/\s+/);
+
+if (jailArgs[0] === `${PREFIX}jail`) {
             console.log("JAIL COMMAND FIRED");
 
             if (!message.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
@@ -960,8 +961,7 @@ if (message.content.startsWith(`${PREFIX}close`)) {
 
             activeJails.add(jailKey);
 
-            const args = message.content.trim().split(/\s+/);
-            const reason = args.slice(2).join(' ') || 'No reason provided';
+           const reason = jailArgs.slice(2).join(' ') || 'No reason provided';
 
             await saveRoles(member, jailedRoleId);
             await removeRolesAndJail(member, jailedRole);
